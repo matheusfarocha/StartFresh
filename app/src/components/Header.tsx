@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useApp } from '../context/AppContext'
 
 interface HeaderProps {
   disabled?: boolean
@@ -9,6 +10,7 @@ export default function Header({ disabled }: HeaderProps) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const { isLoggedIn } = useAuth()
+  const { roadmap } = useApp()
 
   const logoTo = isLoggedIn ? '/home' : '/login'
 
@@ -45,7 +47,7 @@ export default function Header({ disabled }: HeaderProps) {
         ) : (
           <>
             {navLink('/home', 'Home')}
-            {navLink('/roadmap', 'Roadmap')}
+            {navLink(roadmap ? '/roadmap' : '/question/borough', 'Roadmap')}
             {navLink('/resources', 'Resources')}
             {navLink('/community', 'Community')}
           </>

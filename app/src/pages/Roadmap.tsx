@@ -1,9 +1,9 @@
+import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import type { RoadmapSection } from '../data/roadmapEngine'
 
 type StepStatus = 'completed' | 'current' | 'upcoming' | 'locked'
 
-// Maps section keys from the engine to Material Symbol icon names
 const sectionIcons: Record<string, string> = {
   id:           'badge',
   housing:      'house',
@@ -54,6 +54,9 @@ function flattenSections(sections: RoadmapSection[]): FlatStep[] {
 
 export default function Roadmap() {
   const { roadmap, currentStep, setCurrentStep } = useApp()
+  const [openStep, setOpenStep] = useState<number | null>(null)
+  const [fullscreen, setFullscreen] = useState(false)
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
 
   const allSteps: FlatStep[] = roadmap ? flattenSections(roadmap.sections) : []
   const totalSteps = allSteps.length
@@ -67,10 +70,27 @@ export default function Roadmap() {
     return 'locked'
   }
 
-  const handleStepClick = (index: number) => {
-    if (getStatus(index) === 'current') {
-      setCurrentStep((prev) => Math.min(prev + 1, totalSteps - 1))
+  const handleCardClick = (index: number) => {
+    const status = getStatus(index)
+    if (status === 'completed' || status === 'current') {
+      setOpenStep(index)
+      setFullscreen(false)
     }
+  }
+
+  const handleComplete = () => {
+    setCurrentStep(Math.min(currentStep + 1, totalSteps - 1))
+    setOpenStep(null)
+    setFullscreen(false)
+  }
+
+  const handleUndo = (index: number) => {
+    setCurrentStep(index)
+  }
+
+  const closeDetail = () => {
+    setOpenStep(null)
+    setFullscreen(false)
   }
 
   if (!roadmap || allSteps.length === 0) {
@@ -81,9 +101,13 @@ export default function Roadmap() {
     )
   }
 
+  const openStepData = openStep !== null ? allSteps[openStep] : null
+  const openStepStatus = openStep !== null ? getStatus(openStep) : null
+  const openStepIcon = openStepData ? (sectionIcons[openStepData.sectionKey] || 'task_alt') : ''
+
   return (
     <>
-      <main className="pt-4 pb-32 min-h-screen px-6 max-w-2xl mx-auto overflow-hidden relative">
+      <main className="pt-4 pb-32 min-h-screen px-6 max-w-2xl mx-auto relative">
         {/* Progress Overview */}
         <section className="mb-12 text-center">
           <h1 className="text-4xl font-extrabold font-headline tracking-tighter text-on-surface mb-2">My Journey</h1>
@@ -92,7 +116,7 @@ export default function Roadmap() {
           </p>
           <div className="mt-6 w-full h-4 bg-surface-container-highest rounded-full overflow-hidden relative">
             <div
-              className="h-full bg-secondary rounded-full relative transition-all duration-700"
+              className="h-full bg-secondary rounded-full relative transition-all duration-700 ease-out"
               style={{ width: `${progressPercent}%` }}
             >
               <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent" />
@@ -102,7 +126,6 @@ export default function Roadmap() {
 
         {/* Winding Path UI */}
         <div className="relative flex flex-col items-center py-10">
-          {/* SVG Curved Path Background */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none opacity-20">
             <svg className="w-full h-full fill-none stroke-outline-variant stroke-[12]" style={{ strokeDasharray: 12 }} viewBox="0 0 200 800">
               <path d="M100,0 C150,100 50,200 100,300 C150,400 50,500 100,600 C150,700 50,800 100,900" />
@@ -114,40 +137,13 @@ export default function Roadmap() {
             const icon = sectionIcons[step.sectionKey] || 'task_alt'
             const offset = stepOffsets[index % stepOffsets.length]
 
-            // Mascot bubble after first completed step
-            if (index === 1 && currentStep >= 1) {
-              return (
-                <div key={`group-${step.id}`}>
-                  <div className="relative w-full flex justify-end px-4 mb-16 translate-x-4">
-                    <div className="flex items-center gap-4 bg-surface-container-lowest p-4 rounded-lg shadow-[0_4px_0_0_#bcb9b3] max-w-[240px]">
-                      <div className="shrink-0 w-12 h-12 bg-[#fdc003] rounded-full flex items-center justify-center overflow-hidden">
-                        <img alt="FreshStart mascot" src="/images/mascot-sparky.png" className="w-10 h-10 object-contain" />
-                      </div>
-                      <p className="text-xs font-bold leading-tight text-on-surface">You've got this! One step at a time.</p>
-                    </div>
-                  </div>
-
-                  <StepNode
-                    step={step}
-                    index={index}
-                    status={status}
-                    icon={icon}
-                    offset={offset}
-                    onClick={() => handleStepClick(index)}
-                  />
-                </div>
-              )
-            }
-
             return (
               <StepNode
                 key={step.id}
-                step={step}
-                index={index}
-                status={status}
-                icon={icon}
+                step={step} index={index} status={status} icon={icon}
                 offset={offset}
-                onClick={() => handleStepClick(index)}
+                onCardClick={() => handleCardClick(index)}
+                onUndo={() => handleUndo(index)}
               />
             )
           })}
@@ -157,13 +153,128 @@ export default function Roadmap() {
       {/* Floating Action Button */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-40">
         <button
-          onClick={() => setCurrentStep((prev) => Math.min(prev + 1, totalSteps - 1))}
+          onClick={() => handleCardClick(currentStep)}
           className="w-full py-5 bg-primary-container text-on-primary-container font-black text-xl rounded-lg shadow-[0_6px_0_0_#9d4f00] active:translate-y-1 active:shadow-[0_2px_0_0_#9d4f00] transition-all flex items-center justify-center gap-3 cursor-pointer font-headline"
         >
-          <span>Continue Step {currentStep + 1}</span>
+          <span>View Step {currentStep + 1}</span>
           <span className="material-symbols-outlined font-bold">arrow_forward</span>
         </button>
       </div>
+
+      {/* Detail Panel / Guide */}
+      {openStepData && (
+        <div className={`fixed inset-0 z-[200] flex ${isMobile ? 'items-end justify-center' : 'justify-end'}`} onClick={closeDetail}>
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/40" />
+
+          {/* Panel */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`relative bg-background overflow-y-auto transition-all duration-300 ease-out ${
+              isMobile
+                ? fullscreen
+                  ? 'w-full h-full rounded-none'
+                  : 'w-full max-h-[85vh] rounded-t-xl shadow-[0_-8px_40px_rgba(0,0,0,0.15)]'
+                : fullscreen
+                  ? 'w-full h-full shadow-[-8px_0_40px_rgba(0,0,0,0.15)]'
+                  : 'w-full max-w-md h-full shadow-[-8px_0_40px_rgba(0,0,0,0.15)]'
+            }`}
+          >
+            {/* Top bar */}
+            <div className="sticky top-0 bg-background z-10 py-3 px-6 flex items-center justify-end border-b border-outline-variant/10">
+              {isMobile && !fullscreen && (
+                <div className="w-10 h-1 bg-outline-variant/40 rounded-full absolute left-1/2 -translate-x-1/2 top-2" />
+              )}
+              <button
+                onClick={() => setFullscreen(!fullscreen)}
+                className="ml-auto p-2 rounded-full hover:bg-surface-container transition-colors cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-on-surface-variant">
+                  {fullscreen ? 'close_fullscreen' : 'open_in_full'}
+                </span>
+              </button>
+              <button
+                onClick={closeDetail}
+                className="p-2 rounded-full hover:bg-surface-container transition-colors cursor-pointer ml-1"
+              >
+                <span className="material-symbols-outlined text-on-surface-variant">close</span>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 pt-6 pb-8">
+              {/* Header */}
+              <div className="flex items-start gap-5 mb-8">
+                <div className={`w-16 h-16 rounded-lg flex items-center justify-center shrink-0 shadow-[0_4px_0_0_#9d4f00] ${
+                  openStepStatus === 'completed' ? 'bg-secondary-container shadow-[0_4px_0_0_#00635d]' : 'bg-primary-container'
+                }`}>
+                  <span className={`material-symbols-outlined text-3xl ${
+                    openStepStatus === 'completed' ? 'text-on-secondary-container' : 'text-on-primary-container'
+                  }`}>
+                    {openStepIcon}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs font-black uppercase tracking-widest text-on-surface-variant">
+                    Step {openStep! + 1} &bull; {openStepData.category}
+                  </span>
+                  <h2 className="font-headline font-extrabold text-2xl text-on-surface tracking-tight mt-1">
+                    {openStepData.title}
+                  </h2>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="material-symbols-outlined text-sm text-on-surface-variant">schedule</span>
+                    <span className="text-sm font-medium text-on-surface-variant">{openStepData.time}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Guide content */}
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-headline font-bold text-lg text-on-surface mb-3">How to do this</h3>
+                  <div className="bg-surface-container-low p-5 rounded-lg">
+                    <p className="text-on-surface leading-relaxed">{openStepData.detail}</p>
+                  </div>
+                </div>
+
+                {/* Status badge */}
+                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold ${
+                  openStepStatus === 'completed'
+                    ? 'bg-secondary-container text-on-secondary-container'
+                    : 'bg-primary-container/30 text-primary'
+                }`}>
+                  <span className="material-symbols-outlined text-sm">
+                    {openStepStatus === 'completed' ? 'check_circle' : 'radio_button_unchecked'}
+                  </span>
+                  {openStepStatus === 'completed' ? 'Completed' : 'In Progress'}
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="mt-8 space-y-3">
+                {openStepStatus === 'current' && (
+                  <button
+                    onClick={handleComplete}
+                    className="w-full py-4 bg-secondary text-on-secondary font-headline font-black text-lg rounded-lg shadow-[0_4px_0_0_#00635d] active:translate-y-1 active:shadow-[0_1px_0_0_#00635d] transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <span className="material-symbols-outlined">check</span>
+                    Mark as Complete
+                  </button>
+                )}
+                {openStepStatus === 'completed' && (
+                  <button
+                    onClick={() => { handleUndo(openStep!); closeDetail() }}
+                    className="w-full py-4 bg-surface-container-high text-error font-headline font-bold text-lg rounded-lg shadow-[0_4px_0_0_#bcb9b3] active:translate-y-1 active:shadow-[0_1px_0_0_#bcb9b3] transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <span className="material-symbols-outlined">undo</span>
+                    Mark as Incomplete
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Canvas Texture Overlay */}
       <div
@@ -174,7 +285,7 @@ export default function Roadmap() {
   )
 }
 
-/* ── Step Node Component ── */
+/* ── Step Node ── */
 
 interface StepNodeProps {
   step: FlatStep
@@ -182,20 +293,29 @@ interface StepNodeProps {
   status: StepStatus
   icon: string
   offset: string
-  onClick: () => void
+  onCardClick: () => void
+  onUndo: () => void
 }
 
-function StepNode({ step, status, icon, offset, onClick }: StepNodeProps) {
+function StepNode({ step, status, icon, offset, onCardClick, onUndo }: StepNodeProps) {
+
+  /* ── COMPLETED ── */
   if (status === 'completed') {
     return (
       <div className={`relative w-full flex justify-center mb-20 ${offset}`}>
-        <div className="relative group">
-          <div className="w-24 h-24 bg-secondary-container rounded-lg flex items-center justify-center shadow-[0_6px_0_0_#00635d] border-4 border-white">
+        <div className="relative overflow-visible p-3 -m-3">
+          <button
+            onClick={onCardClick}
+            className="w-24 h-24 bg-secondary-container rounded-lg flex items-center justify-center shadow-[0_6px_0_0_#00635d] border-4 border-white cursor-pointer hover:scale-105 active:translate-y-1 active:shadow-[0_2px_0_0_#00635d] transition-all duration-200"
+          >
             <span className="material-symbols-outlined text-on-secondary-container text-4xl">{icon}</span>
-          </div>
-          <div className="absolute -top-3 -right-3 w-10 h-10 bg-secondary rounded-full flex items-center justify-center border-4 border-white text-white">
-            <span className="material-symbols-outlined text-xl">check</span>
-          </div>
+          </button>
+          <button
+            onClick={onUndo}
+            className="absolute top-0 right-0 w-10 h-10 bg-error rounded-full flex items-center justify-center border-4 border-white text-white cursor-pointer hover:scale-110 active:scale-95 transition-transform duration-200"
+          >
+            <span className="material-symbols-outlined text-xl">undo</span>
+          </button>
           <div className="absolute top-full mt-4 left-1/2 -translate-x-1/2 w-48 text-center">
             <p className="text-sm font-bold text-on-surface-variant">{step.title}</p>
           </div>
@@ -204,29 +324,27 @@ function StepNode({ step, status, icon, offset, onClick }: StepNodeProps) {
     )
   }
 
+  /* ── CURRENT ── */
   if (status === 'current') {
     return (
       <div className={`relative w-full flex justify-center mb-24 ${offset}`}>
         <div className="relative">
           <button
-            onClick={onClick}
-            className="w-32 h-32 bg-primary-container rounded-lg flex flex-col items-center justify-center shadow-[0_8px_0_0_#9d4f00] border-4 border-white active:translate-y-2 active:shadow-none transition-all cursor-pointer"
-            style={{ boxShadow: '0 8px 0 0 #9d4f00, 0 0 20px rgba(242, 140, 56, 0.4)' }}
+            onClick={onCardClick}
+            className="w-32 h-32 bg-primary-container rounded-lg flex flex-col items-center justify-center border-4 border-white cursor-pointer hover:scale-105 active:translate-y-2 active:shadow-none transition-all duration-200 roadmap-current"
           >
             <span className="material-symbols-outlined text-on-primary-container text-5xl mb-1">{icon}</span>
             <span className="text-[10px] font-black uppercase tracking-widest text-on-primary-container">Current</span>
           </button>
           <div className="absolute top-full mt-6 left-1/2 -translate-x-1/2 w-56 text-center">
             <p className="text-lg font-black text-primary leading-tight">{step.title}</p>
-            <span className="inline-block mt-2 px-4 py-1 bg-[#fdc003] text-[#3d2b00] rounded-full text-[10px] font-black tracking-widest uppercase">
-              Start Task
-            </span>
           </div>
         </div>
       </div>
     )
   }
 
+  /* ── UPCOMING ── */
   if (status === 'upcoming') {
     return (
       <div className={`relative w-full flex justify-center mb-24 ${offset} opacity-60`}>
@@ -242,15 +360,12 @@ function StepNode({ step, status, icon, offset, onClick }: StepNodeProps) {
     )
   }
 
-  // locked
+  /* ── LOCKED ── */
   return (
     <div className={`relative w-full flex justify-center mb-12 ${offset} opacity-40`}>
       <div className="relative">
         <div className="w-24 h-24 bg-surface-container-highest rounded-lg flex items-center justify-center shadow-[0_6px_0_0_#bcb9b3] border-4 border-white">
           <span className="material-symbols-outlined text-outline text-4xl">{icon}</span>
-        </div>
-        <div className="absolute -top-3 -right-3 w-10 h-10 bg-outline rounded-full flex items-center justify-center border-4 border-white text-white">
-          <span className="material-symbols-outlined text-xl">lock</span>
         </div>
         <div className="absolute top-full mt-4 left-1/2 -translate-x-1/2 w-48 text-center">
           <p className="text-sm font-bold text-outline">{step.title}</p>
