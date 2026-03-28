@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import Welcome from './pages/Welcome'
+import Login from './pages/Login'
+import Home from './pages/Home'
 import QuestionBorough from './pages/QuestionBorough'
 import QuestionTimeAway from './pages/QuestionTimeAway'
 import QuestionUrgentNeed from './pages/QuestionUrgentNeed'
@@ -12,6 +14,8 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<Welcome />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/home" element={<Home />} />
         <Route path="/question/borough" element={<QuestionBorough />} />
         <Route path="/question/time-away" element={<QuestionTimeAway />} />
         <Route path="/question/urgent-need" element={<QuestionUrgentNeed />} />

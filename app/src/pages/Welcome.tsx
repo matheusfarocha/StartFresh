@@ -47,7 +47,7 @@ export default function Welcome() {
 
           <div className="flex flex-col sm:flex-row gap-6 pt-4 w-full sm:w-auto">
             <button
-              onClick={() => navigate('/question/borough')}
+              onClick={() => navigate('/login')}
               className="group relative flex items-center justify-center gap-3 bg-primary text-on-primary px-10 py-5 rounded-xl font-headline font-bold text-xl shadow-[0_20px_40px_-10px_rgba(157,79,0,0.3)] active:scale-95 transition-all duration-300 hover:shadow-[0_25px_50px_-12px_rgba(157,79,0,0.4)] cursor-pointer"
             >
               Get Started
