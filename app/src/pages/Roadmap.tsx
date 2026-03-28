@@ -1,3 +1,5 @@
+// Making Roadmap Algorithim for the user to see their progress and what they have left to do. This will be a winding path with different steps along the way. Each step will have a different icon and color based on the category of the step. The user can click on the current step to mark it as completed and move on to the next step. The roadmap will also have a progress bar at the top to show how far along the user is in their journey.
+
 import { useState } from 'react'
 import { roadmapSteps } from '../data/roadmapSteps'
 
