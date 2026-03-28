@@ -19,20 +19,39 @@ const NEEDS = [
   { key: 'mentalHealth', label: 'Mental Health', icon: '💬', sub: 'Counseling & support' },
 ];
 
+const ROADMAP_MODES = [
+  {
+    value: 'auto',
+    label: 'Build it myself',
+    sub: 'I\'ll follow the steps on my own',
+    icon: '🗺️',
+  },
+  {
+    value: 'mentor',
+    label: 'A mentor or caseworker will help me',
+    sub: 'Someone is guiding me through this',
+    icon: '🤝',
+  },
+];
+
+// 4 steps total (0 = mode, 1 = time away, 2 = borough, 3 = needs)
 const TIPS = [
+  "There's no wrong answer here. Both paths lead to the same plan — we just want to know who's with you.",
   "Don't worry if things feel uncertain. I'll use your answers to find what matters most right now.",
   "Don't worry if you're not sure about your final address yet. Picking the borough where you'll spend the most time is a great start.",
   "Pick everything that applies — there are no wrong answers. You can always adjust your plan later.",
 ];
 
+const TOTAL_STEPS = 4;
+
 export default function Onboarding() {
   const navigate = useNavigate();
   const { setProfile, setRoadmap } = useApp();
   const [step, setStep] = useState(0);
-  const [local, setLocal] = useState({ timeAway: null, borough: null, needs: [] });
+  const [local, setLocal] = useState({ roadmapMode: null, timeAway: null, borough: null, needs: [] });
 
   function handleNext() {
-    if (step < 2) { setStep(s => s + 1); return; }
+    if (step < TOTAL_STEPS - 1) { setStep(s => s + 1); return; }
     const finalProfile = { ...local };
     setProfile(finalProfile);
     setRoadmap(generateRoadmap(finalProfile));
@@ -40,11 +59,12 @@ export default function Onboarding() {
   }
 
   const canNext =
-    (step === 0 && local.timeAway) ||
-    (step === 1 && local.borough) ||
-    (step === 2 && local.needs.length > 0);
+    (step === 0 && local.roadmapMode) ||
+    (step === 1 && local.timeAway) ||
+    (step === 2 && local.borough) ||
+    (step === 3 && local.needs.length > 0);
 
-  const progress = ((step + 1) / 3) * 100;
+  const progress = ((step + 1) / TOTAL_STEPS) * 100;
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--cream)', display: 'flex', flexDirection: 'column' }}>
@@ -63,21 +83,67 @@ export default function Onboarding() {
           <span style={{ fontSize: 20 }}>🌱</span>
           <span style={{ fontFamily: 'var(--font-display)', fontSize: 18, color: 'var(--ink)', fontWeight: 400 }}>FreshStart</span>
         </div>
-        <span style={{ fontSize: 13, color: 'var(--ink-muted)' }}>Step {step + 1} of 3</span>
+        <span style={{ fontSize: 13, color: 'var(--ink-muted)' }}>Step {step + 1} of {TOTAL_STEPS}</span>
       </nav>
 
       <main style={{ flex: 1, maxWidth: 640, margin: '0 auto', padding: '48px 32px', width: '100%' }} className="page-enter">
         <Mascot message={TIPS[step]} />
 
+        {/* Step 0 — Roadmap mode */}
         {step === 0 && (
+          <div>
+            <h2 style={headingStyle}>How would you like to build your roadmap?</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {ROADMAP_MODES.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setLocal(p => ({ ...p, roadmapMode: opt.value }))}
+                  style={{
+                    padding: '22px 24px',
+                    background: local.roadmapMode === opt.value ? 'var(--green-deep)' : 'var(--white)',
+                    border: `2px solid ${local.roadmapMode === opt.value ? 'var(--green-deep)' : 'var(--cream-dark)'}`,
+                    borderRadius: 'var(--radius-md)',
+                    cursor: 'pointer', textAlign: 'left',
+                    fontFamily: 'var(--font-body)', transition: 'var(--transition)',
+                    display: 'flex', alignItems: 'center', gap: 16,
+                  }}
+                >
+                  <span style={{ fontSize: 32 }}>{opt.icon}</span>
+                  <div>
+                    <div style={{ fontSize: 16, fontWeight: 500, color: local.roadmapMode === opt.value ? 'white' : 'var(--ink)', marginBottom: 4 }}>
+                      {opt.label}
+                    </div>
+                    <div style={{ fontSize: 13, color: local.roadmapMode === opt.value ? 'rgba(255,255,255,0.72)' : 'var(--ink-muted)' }}>
+                      {opt.sub}
+                    </div>
+                  </div>
+                  {local.roadmapMode === opt.value && (
+                    <div style={{ marginLeft: 'auto', width: 24, height: 24, borderRadius: '50%', background: 'var(--green-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 13 }}>✓</div>
+                  )}
+                </button>
+              ))}
+            </div>
+            {local.roadmapMode === 'mentor' && (
+              <div style={{
+                marginTop: 16, padding: '14px 18px',
+                background: 'var(--amber-pale)', border: '1px solid var(--amber)',
+                borderRadius: 'var(--radius-md)', fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.6,
+              }}>
+                Great — your mentor or caseworker can help you go through the next steps together.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Step 1 — Time away */}
+        {step === 1 && (
           <div>
             <h2 style={headingStyle}>How long were you away?</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {TIME_OPTIONS.map(opt => (
                 <OptionCard
                   key={opt.value}
-                  label={opt.label}
-                  sub={opt.sub}
+                  label={opt.label} sub={opt.sub}
                   selected={local.timeAway === opt.value}
                   onClick={() => setLocal(p => ({ ...p, timeAway: opt.value }))}
                 />
@@ -86,7 +152,8 @@ export default function Onboarding() {
           </div>
         )}
 
-        {step === 1 && (
+        {/* Step 2 — Borough */}
+        {step === 2 && (
           <div>
             <h2 style={headingStyle}>Which borough are you returning to?</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
@@ -102,7 +169,8 @@ export default function Onboarding() {
           </div>
         )}
 
-        {step === 2 && (
+        {/* Step 3 — Needs */}
+        {step === 3 && (
           <div>
             <h2 style={headingStyle}>What do you need most right now?</h2>
             <p style={{ color: 'var(--ink-soft)', fontSize: 14, marginBottom: 24 }}>
@@ -135,7 +203,7 @@ export default function Onboarding() {
             </Button>
           )}
           <Button onClick={handleNext} disabled={!canNext} style={{ flex: 1 }}>
-            {step === 2 ? 'Build my roadmap →' : 'Next →'}
+            {step === TOTAL_STEPS - 1 ? 'Build my roadmap →' : 'Next →'}
           </Button>
         </div>
       </main>
