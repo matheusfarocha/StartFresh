@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;family=Be+Vietnam+Pro:ital,wght@0,100..900;1,100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "error-container": "#fa7150",
+              "surface-container-highest": "#eae9dd",
+              "surface": "#fffcf7",
+              "primary-container": "#ffaf75",
+              "secondary-container": "#97f7e4",
+              "on-tertiary-fixed": "#00283d",
+              "on-tertiary-container": "#003f5d",
+              "surface-container-low": "#fcf9f3",
+              "on-error": "#ffffff",
+              "secondary-fixed": "#97f7e4",
+              "on-secondary-fixed-variant": "#00695d",
+              "inverse-surface": "#0e0e0c",
+              "on-error-container": "#671200",
+              "tertiary-fixed-dim": "#69b8ee",
+              "tertiary-dim": "#005e88",
+              "on-tertiary-fixed-variant": "#00486a",
+              "secondary": "#007164",
+              "tertiary-fixed": "#78c6fd",
+              "outline": "#818178",
+              "on-primary-fixed-variant": "#6e3600",
+              "secondary-dim": "#006458",
+              "surface-container": "#f6f4ec",
+              "inverse-primary": "#f68a2f",
+              "on-background": "#373831",
+              "on-secondary-fixed": "#004a41",
+              "tertiary-container": "#78c6fd",
+              "primary": "#9d4f00",
+              "error-dim": "#821a01",
+              "secondary-fixed-dim": "#89e8d6",
+              "on-primary-container": "#612f00",
+              "on-surface": "#373831",
+              "surface-bright": "#fffcf7",
+              "inverse-on-surface": "#9e9d98",
+              "surface-container-high": "#f0eee5",
+              "primary-fixed-dim": "#ff9b4c",
+              "on-surface-variant": "#64655c",
+              "surface-dim": "#e3e3d6",
+              "on-secondary": "#ffffff",
+              "tertiary": "#006b9a",
+              "background": "#fffcf7",
+              "primary-fixed": "#ffaf75",
+              "on-tertiary": "#ffffff",
+              "on-secondary-container": "#005e53",
+              "surface-tint": "#9d4f00",
+              "outline-variant": "#babaaf",
+              "error": "#b23d21",
+              "surface-container-lowest": "#ffffff",
+              "on-primary": "#ffffff",
+              "surface-variant": "#eae9dd",
+              "primary-dim": "#8b4500",
+              "on-primary-fixed": "#421e00"
+            },
+            fontFamily: {
+              "headline": ["Plus Jakarta Sans"],
+              "body": ["Be Vietnam Pro"],
+              "label": ["Plus Jakarta Sans"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface selection:bg-primary-container/30">
+<header class="sticky top-0 z-50 flex justify-between items-center w-full max-w-screen-xl mx-auto bg-[#fcf9f3] dark:bg-stone-900 rounded-b-[3rem] px-6 py-4 shadow-[0_24px_48px_-12px_rgba(55,56,49,0.06)]">
+<div class="text-2xl font-extrabold text-[#9d4f00] dark:text-orange-400 font-['Plus_Jakarta_Sans']">
+            FreshStart
+        </div>
+<nav class="hidden md:flex items-center gap-2">
+<a class="text-[#373831] dark:text-stone-400 font-medium hover:bg-[#ffaf75]/20 transition-colors rounded-full px-4 py-2 active:scale-95 transition-transform duration-200" href="#">Journey</a>
+<a class="text-[#373831] dark:text-stone-400 font-medium hover:bg-[#ffaf75]/20 transition-colors rounded-full px-4 py-2 active:scale-95 transition-transform duration-200" href="#">Resources</a>
+<a class="text-[#373831] dark:text-stone-400 font-medium hover:bg-[#ffaf75]/20 transition-colors rounded-full px-4 py-2 active:scale-95 transition-transform duration-200" href="#">Support</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-[#9d4f00] dark:text-orange-400 text-2xl hover:bg-[#ffaf75]/20 p-2 rounded-full transition-all">
+                account_circle
+            </button>
+</div>
+</header>
+<main class="max-w-5xl mx-auto px-6 py-12 md:py-20">
+<div class="mb-12">
+<div class="flex justify-between items-end mb-4">
+<span class="font-headline font-bold text-primary tracking-tight">Step 1 of 3</span>
+<span class="text-on-surface-variant font-medium">Getting Started</span>
+</div>
+<div class="h-3 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-1/3 rounded-full"></div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+<div class="lg:col-span-8">
+<h1 class="font-headline text-4xl md:text-5xl font-extrabold text-on-surface tracking-tight mb-6 leading-tight">
+                    Which borough are you returning to?
+                </h1>
+<p class="text-lg text-on-surface-variant mb-10 max-w-2xl leading-relaxed">
+                    Selecting your borough helps us connect you with local neighborhood resources and support teams closest to your new home.
+                </p>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<button class="group flex items-center justify-between p-6 bg-surface-container-lowest hover:bg-primary-container/10 border-2 border-transparent hover:border-primary-container rounded-xl transition-all duration-300 text-left active:scale-[0.98]">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-3xl">location_city</span>
+</div>
+<span class="font-headline text-xl font-bold">Bronx</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+<button class="group flex items-center justify-between p-6 bg-surface-container-lowest hover:bg-primary-container/10 border-2 border-transparent hover:border-primary-container rounded-xl transition-all duration-300 text-left active:scale-[0.98]">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-3xl">apartment</span>
+</div>
+<span class="font-headline text-xl font-bold">Brooklyn</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+<button class="group flex items-center justify-between p-6 bg-surface-container-lowest hover:bg-primary-container/10 border-2 border-transparent hover:border-primary-container rounded-xl transition-all duration-300 text-left active:scale-[0.98]">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-3xl">domain</span>
+</div>
+<span class="font-headline text-xl font-bold">Manhattan</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+<button class="group flex items-center justify-between p-6 bg-surface-container-lowest hover:bg-primary-container/10 border-2 border-transparent hover:border-primary-container rounded-xl transition-all duration-300 text-left active:scale-[0.98]">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-3xl">holiday_village</span>
+</div>
+<span class="font-headline text-xl font-bold">Queens</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+<button class="group flex items-center justify-between p-6 bg-surface-container-lowest hover:bg-primary-container/10 border-2 border-transparent hover:border-primary-container rounded-xl transition-all duration-300 text-left active:scale-[0.98] sm:col-span-2">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-3xl">foundation</span>
+</div>
+<span class="font-headline text-xl font-bold">Staten Island</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</div>
+</div>
+<div class="lg:col-span-4 sticky top-32">
+<div class="relative p-8 bg-secondary-container rounded-xl shadow-lg transform rotate-1">
+<div class="absolute -top-6 -right-6 w-24 h-24 bg-primary-container rounded-full blur-2xl opacity-40"></div>
+<div class="flex flex-col gap-4 relative z-10">
+<div class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-md -mt-12 self-start border-4 border-secondary-container overflow-hidden">
+<img alt="FreshStart Mascot" class="w-10 h-10" data-alt="a friendly minimalist seedling character with large expressive eyes and a warm smile on a soft pastel background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQDjFun_sxhLyLIBur4Yik6mZgW2uYb9e3fY3t7ViDLRPHPfUl-abdTKyaawjjFRURaeaJ982qtMQfPo3ENBQeaBDbOzrGiL2dQukbnpkym9XmdNCn5w28tanGmp2qdL1OTwyCdnizwGSU-DCtwgc-G0Nj8cSERKVyHgpov0hJejHj3fgqD4un-LTaMXEPZjy6yIJvFp3-qFfmSbt1r0LX9pbJiRGkEywo_cLUbMXICfGvz_7c042v4F49Ij5HB9KHnoZd3iSc8cg"/>
+</div>
+<h3 class="font-headline font-bold text-on-secondary-container text-xl">Friendly Tip</h3>
+<p class="text-on-secondary-container leading-relaxed">
+                            "Don't worry if you're not sure about your final address yet! Picking the borough where you'll be spending the most time is a great start."
+                        </p>
+</div>
+</div>
+<div class="mt-8 p-6 bg-surface-container-low rounded-lg">
+<div class="flex items-center gap-3 text-secondary font-bold mb-2">
+<span class="material-symbols-outlined">verified_user</span>
+<span class="font-headline">Privacy First</span>
+</div>
+<p class="text-sm text-on-surface-variant">Your location data is only used to personalize your resource list. We never share your personal information without your consent.</p>
+</div>
+</div>
+</div>
+</main>
+<footer class="w-full mt-12 py-10 px-8 bg-[#f6f4ec] dark:bg-stone-950">
+<div class="flex flex-col md:flex-row justify-between items-center gap-6 w-full max-w-screen-xl mx-auto">
+<div class="font-['Plus_Jakarta_Sans'] font-bold text-[#9d4f00] text-xl">
+                FreshStart
+            </div>
+<div class="flex flex-wrap justify-center gap-6 font-['Be_Vietnam_Pro'] text-base text-[#373831] dark:text-stone-300">
+<a class="opacity-80 hover:text-[#9d4f00] transition-all hover:translate-x-1 duration-300" href="#">Privacy Policy</a>
+<a class="opacity-80 hover:text-[#9d4f00] transition-all hover:translate-x-1 duration-300" href="#">Terms of Service</a>
+<a class="opacity-80 hover:text-[#9d4f00] transition-all hover:translate-x-1 duration-300" href="#">Help Center</a>
+<a class="opacity-80 hover:text-[#9d4f00] transition-all hover:translate-x-1 duration-300" href="#">Contact Us</a>
+</div>
+<p class="text-[#373831] dark:text-stone-300 opacity-60 text-sm">
+                © 2024 FreshStart NYC. You've got this.
+            </p>
+</div>
+</footer>
+</body></html>
