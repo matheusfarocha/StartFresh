@@ -1,0 +1,57 @@
+:root {
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+
+  --green-deep:  #1a3d2b;
+  --green-mid:   #2d6a4f;
+  --green-light: #52b788;
+  --green-pale:  #d8f3dc;
+
+  --cream:       #faf7f2;
+  --cream-dark:  #e8e0d5;
+  --white:       #ffffff;
+
+  --ink:         #1a1a14;
+  --ink-soft:    #5a5a50;
+  --ink-muted:   #9a9a8e;
+
+  --amber:       #b07d2e;
+  --amber-pale:  #fef3cd;
+
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   18px;
+  --radius-xl:   24px;
+
+  --transition:  all 0.2s ease;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--cream);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, textarea {
+  font-family: var(--font-body);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page-enter {
+  animation: fadeUp 0.35s ease both;
+}
