@@ -37,6 +37,7 @@ const URGENCY: Record<string, { base: number; label: string; icon: string; color
   family:       { base: 55,  label: 'Family Reconnection', icon: 'family_restroom',  color: '#9e9e94' },
   education:    { base: 45,  label: 'Education',           icon: 'school',           color: '#52b788' },
   community:    { base: 40,  label: 'Community',           icon: 'groups',           color: '#2d6a4f' },
+  legal:        { base: 75,  label: 'Legal Help',          icon: 'gavel',            color: '#1a3d2b' },
 }
 
 // ── Borough-specific steps ────────────────────────────────────────
@@ -113,17 +114,24 @@ const STEPS: Record<string, Record<string, RoadmapStep[]>> = {
       { id: 'c-2', text: 'Find a mentor', detail: 'Community leaders and formerly incarcerated mentors matched to your background. Free through FreshStart.', time: 'This week' },
     ],
   },
+  legal: {
+    default: [
+      { id: 'l-1', text: 'Know the NYC Clean Slate Act (Nov 2024)', detail: 'Automatic sealing of eligible convictions after waiting period. Call Legal Aid at (212) 577-3300 to check if you qualify.', time: '30 min' },
+      { id: 'l-2', text: 'Get free legal representation', detail: 'Legal Aid Society — free for income-eligible New Yorkers. (212) 577-3300. Walk-in clinics at 120 Wall St Mon–Fri 9am–5pm.', time: 'This week' },
+      { id: 'l-3', text: 'Know the NYC Fair Chance Act', detail: 'Employers cannot ask about your record before a conditional offer. Print this info — it\'s the law. Get it at nyc.gov/fairchance.', time: '30 min' },
+    ],
+  },
 }
 
 // ── Auto-add needs based on time away ────────────────────────────
 function getAutoNeeds(timeAway: string): string[] {
   const extra: string[] = []
   // 5+ years away → mental health support becomes critical
-  if (['5–10 years', '10–20 years', '20+ years'].includes(timeAway)) {
+  if (['5-15 years', '15+ years'].includes(timeAway)) {
     extra.push('mentalHealth')
   }
-  // 20+ years → community reconnection is also essential
-  if (timeAway === '20+ years') {
+  // 15+ years → community reconnection is also essential
+  if (timeAway === '15+ years') {
     extra.push('community')
   }
   return extra
@@ -134,27 +142,52 @@ export function generateRoadmap({
   timeAway,
   borough,
   needs,
+  hasID,
+  hasBirthCert,
+  housingStatus,
+  hasChildren: _hasChildren,
+  paroleProbation,
 }: {
   timeAway: string
   borough: string
   needs: string[]
+  hasID?: string
+  hasBirthCert?: string
+  housingStatus?: string
+  hasChildren?: string   // reserved for future shelter-intake logic
+  paroleProbation?: string
 }): GeneratedRoadmap {
   const autoNeeds = getAutoNeeds(timeAway)
+
+  // Auto-add legal if on parole or probation
+  const extraNeeds: string[] = []
+  if (paroleProbation === 'parole' || paroleProbation === 'probation') {
+    extraNeeds.push('legal')
+  }
+
   // ID always first; then user selections; then auto-adds
-  const allNeeds = [...new Set(['id', ...needs, ...autoNeeds])]
+  const allNeeds = [...new Set(['id', ...needs, ...autoNeeds, ...extraNeeds])]
 
   const sections: RoadmapSection[] = allNeeds.map(needKey => {
     const meta = URGENCY[needKey]
     if (!meta) return null!
 
     const stepsMap = STEPS[needKey] ?? {}
-    const steps: RoadmapStep[] = stepsMap[borough] ?? stepsMap['default'] ?? []
+    let steps: RoadmapStep[] = stepsMap[borough] ?? stepsMap['default'] ?? []
+
+    // If user already has birth certificate, filter out the 'Get your birth certificate' step
+    if (needKey === 'id' && hasID !== 'yes' && hasBirthCert === 'yes') {
+      steps = steps.filter(s => s.id !== 'id-1')
+    }
 
     // Score: base weight + bonus if user explicitly selected it
     let score = meta.base
     if (needs.includes(needKey)) score += 20
     if (needKey === 'id') score = 999                                  // always top
-    if (needKey === 'mentalHealth' && timeAway === '20+ years') score += 15
+    if (needKey === 'mentalHealth' && timeAway === '15+ years') score += 15
+
+    // Housing emergency: bump to near-top
+    if (needKey === 'housing' && housingStatus === 'nowhere') score = 998
 
     return {
       key: needKey,
@@ -163,7 +196,7 @@ export function generateRoadmap({
       color: meta.color,
       score,
       steps,
-      isAuto: autoNeeds.includes(needKey) && !needs.includes(needKey),
+      isAuto: (autoNeeds.includes(needKey) || extraNeeds.includes(needKey)) && !needs.includes(needKey),
     }
   }).filter(Boolean)
 
@@ -171,4 +204,17 @@ export function generateRoadmap({
   sections.sort((a, b) => b.score - a.score)
 
   return { sections, borough, timeAway, generatedAt: new Date().toISOString() }
+}
+
+export function buildRoadmapFromAnswers(answers: Record<string, string | string[]>): GeneratedRoadmap {
+  return generateRoadmap({
+    timeAway: (answers.timeAway as string) ?? '< 1 year',
+    borough: (answers.borough as string) ?? 'default',
+    needs: (answers.needs as string[]) ?? [],
+    hasID: answers.hasID as string | undefined,
+    hasBirthCert: answers.hasBirthCert as string | undefined,
+    housingStatus: answers.housingStatus as string | undefined,
+    hasChildren: answers.hasChildren as string | undefined,
+    paroleProbation: answers.paroleProbation as string | undefined,
+  })
 }

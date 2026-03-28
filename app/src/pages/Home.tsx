@@ -9,7 +9,7 @@ const features = [
     color: 'bg-primary-container',
     textColor: 'text-on-primary-container',
     shadow: 'shadow-[0_6px_0_0_#9d4f00]',
-    action: '/question/borough',
+    action: '/question/timeAway',
     actionLabel: 'Start My Plan',
     primary: true,
   },
