@@ -1,8 +1,15 @@
 import { useNavigate } from 'react-router-dom'
 import Icon from '../components/Icon'
+import { useAuth } from '../context/AuthContext'
 
 export default function Login() {
   const navigate = useNavigate()
+  const { login } = useAuth()
+
+  const handleLogin = () => {
+    login()
+    navigate('/home')
+  }
 
   return (
     <main className="flex-grow flex items-center justify-center px-6 py-16">
@@ -51,7 +58,7 @@ export default function Login() {
 
           {/* Log In Button */}
           <button
-            onClick={() => navigate('/home')}
+            onClick={handleLogin}
             className="w-full py-4 bg-primary-container text-on-primary-container font-headline font-black text-lg rounded-lg shadow-[0_4px_0_0_#9d4f00] active:translate-y-1 active:shadow-[0_1px_0_0_#9d4f00] transition-all cursor-pointer flex items-center justify-center gap-2"
           >
             Log In
@@ -67,7 +74,7 @@ export default function Login() {
 
           {/* Continue as Guest */}
           <button
-            onClick={() => navigate('/home')}
+            onClick={handleLogin}
             className="w-full py-4 bg-surface-container-high text-on-surface font-headline font-bold text-lg rounded-lg shadow-[0_4px_0_0_#bcb9b3] active:translate-y-1 active:shadow-[0_1px_0_0_#bcb9b3] transition-all cursor-pointer"
           >
             Continue as Guest

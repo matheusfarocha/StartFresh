@@ -8,6 +8,9 @@ import QuestionTimeAway from './pages/QuestionTimeAway'
 import QuestionUrgentNeed from './pages/QuestionUrgentNeed'
 import GeneratingRoadmap from './pages/GeneratingRoadmap'
 import Roadmap from './pages/Roadmap'
+import Resources from './pages/Resources'
+import Community from './pages/Community'
+import Profile from './pages/Profile'
 
 export default function App() {
   return (
@@ -21,6 +24,9 @@ export default function App() {
         <Route path="/question/urgent-need" element={<QuestionUrgentNeed />} />
         <Route path="/generating" element={<GeneratingRoadmap />} />
         <Route path="/roadmap" element={<Roadmap />} />
+        <Route path="/resources" element={<Resources />} />
+        <Route path="/community" element={<Community />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

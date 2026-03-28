@@ -155,7 +155,7 @@ export default function Roadmap() {
       </main>
 
       {/* Floating Action Button */}
-      <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-40">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-40">
         <button
           onClick={() => setCurrentStep((prev) => Math.min(prev + 1, totalSteps - 1))}
           className="w-full py-5 bg-primary-container text-on-primary-container font-black text-xl rounded-lg shadow-[0_6px_0_0_#9d4f00] active:translate-y-1 active:shadow-[0_2px_0_0_#9d4f00] transition-all flex items-center justify-center gap-3 cursor-pointer font-headline"
@@ -164,26 +164,6 @@ export default function Roadmap() {
           <span className="material-symbols-outlined font-bold">arrow_forward</span>
         </button>
       </div>
-
-      {/* Bottom Nav Bar */}
-      <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 bg-background border-t-4 border-outline-variant">
-        <a href="#" className="flex flex-col items-center justify-center bg-[#F28C38] text-white rounded-lg px-6 py-2 shadow-[0_4px_0_0_#9D4F00] active:translate-y-1 transition-all duration-100">
-          <span className="material-symbols-outlined">map</span>
-          <span className="text-[10px] font-bold uppercase tracking-widest mt-1 font-headline">Journey</span>
-        </a>
-        <a href="#" className="flex flex-col items-center justify-center text-on-surface px-6 py-2 hover:text-[#F28C38] transition-all active:translate-y-1 duration-100">
-          <span className="material-symbols-outlined">menu_book</span>
-          <span className="text-[10px] font-bold uppercase tracking-widest mt-1 font-headline">Resources</span>
-        </a>
-        <a href="#" className="flex flex-col items-center justify-center text-on-surface px-6 py-2 hover:text-[#F28C38] transition-all active:translate-y-1 duration-100">
-          <span className="material-symbols-outlined">face</span>
-          <span className="text-[10px] font-bold uppercase tracking-widest mt-1 font-headline">Mascot</span>
-        </a>
-        <a href="#" className="flex flex-col items-center justify-center text-on-surface px-6 py-2 hover:text-[#F28C38] transition-all active:translate-y-1 duration-100">
-          <span className="material-symbols-outlined">person</span>
-          <span className="text-[10px] font-bold uppercase tracking-widest mt-1 font-headline">Profile</span>
-        </a>
-      </nav>
 
       {/* Canvas Texture Overlay */}
       <div

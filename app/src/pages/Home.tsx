@@ -20,19 +20,8 @@ const features = [
     color: 'bg-secondary-container',
     textColor: 'text-on-secondary-container',
     shadow: 'shadow-[0_6px_0_0_#00635d]',
-    action: '#',
+    action: '/resources',
     actionLabel: 'Browse Resources',
-    primary: false,
-  },
-  {
-    icon: 'face',
-    title: 'Meet Your Mentor',
-    description: 'Get guidance from a friendly AI companion who understands your journey.',
-    color: 'bg-[#fdc003]',
-    textColor: 'text-[#3d2b00]',
-    shadow: 'shadow-[0_6px_0_0_#805f00]',
-    action: '#',
-    actionLabel: 'Say Hello',
     primary: false,
   },
   {
@@ -42,8 +31,8 @@ const features = [
     color: 'bg-tertiary-container',
     textColor: 'text-on-tertiary-container',
     shadow: 'shadow-[0_6px_0_0_#005e88]',
-    action: '#',
-    actionLabel: 'Coming Soon',
+    action: '/community',
+    actionLabel: 'Join Community',
     primary: false,
   },
 ]
@@ -67,27 +56,10 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Quick status card */}
-        <div className="bg-surface-container-lowest p-6 rounded-lg shadow-[0_4px_0_0_#bcb9b3] flex items-center gap-5">
-          <div className="w-16 h-16 bg-secondary-container rounded-lg flex items-center justify-center shadow-[0_3px_0_0_#00635d] shrink-0">
-            <Icon name="emoji_events" className="text-on-secondary-container text-3xl" />
-          </div>
-          <div className="flex-grow">
-            <p className="font-headline font-bold text-on-surface">Your Journey Awaits</p>
-            <p className="text-sm text-on-surface-variant mt-1">
-              Answer 3 quick questions and we'll build a personalized action plan for you.
-            </p>
-          </div>
-          <Icon name="arrow_forward" className="text-primary text-2xl shrink-0" />
-        </div>
       </section>
 
       {/* Feature Grid */}
       <section>
-        <h2 className="font-headline font-extrabold text-xl text-on-surface tracking-tight mb-6 uppercase">
-          What would you like to do?
-        </h2>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {features.map((feature) => (
             <button
