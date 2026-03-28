@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import Icon from '../components/Icon'
+import { useApp } from '../context/AppContext'
 
 const boroughs = [
   { name: 'Bronx', icon: 'location_city' },
@@ -11,6 +12,7 @@ const boroughs = [
 
 export default function QuestionBorough() {
   const navigate = useNavigate()
+  const { setBorough } = useApp()
 
   return (
     <main className="max-w-5xl mx-auto px-6 py-12 md:py-20">
@@ -39,7 +41,7 @@ export default function QuestionBorough() {
             {boroughs.map((borough) => (
               <button
                 key={borough.name}
-                onClick={() => navigate('/question/time-away')}
+                onClick={() => { setBorough(borough.name); navigate('/question/time-away') }}
                 className={`group flex items-center justify-between p-6 bg-surface-container-lowest hover:bg-primary-container/10 border-2 border-transparent hover:border-primary-container rounded-xl transition-all duration-300 text-left active:scale-[0.98] cursor-pointer ${
                   borough.name === 'Staten Island' ? 'sm:col-span-2' : ''
                 }`}

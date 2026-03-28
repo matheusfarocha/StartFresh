@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import Icon from '../components/Icon'
+import { useApp } from '../context/AppContext'
 
 const timeOptions = [
   { label: 'Less than 1 year', icon: 'schedule' },
@@ -11,6 +12,7 @@ const timeOptions = [
 
 export default function QuestionTimeAway() {
   const navigate = useNavigate()
+  const { setTimeAway } = useApp()
 
   return (
     <main className="min-h-screen max-w-screen-xl mx-auto px-6 pt-12 pb-24 flex flex-col items-center">
@@ -54,7 +56,7 @@ export default function QuestionTimeAway() {
             {timeOptions.map((option) => (
               <button
                 key={option.label}
-                onClick={() => navigate('/question/urgent-need')}
+                onClick={() => { setTimeAway(option.label); navigate('/question/urgent-need') }}
                 className="group flex items-center justify-between px-8 py-7 bg-surface-container-lowest hover:bg-primary-container/20 border-b-2 border-transparent hover:border-primary transition-all duration-300 rounded-xl shadow-sm active:scale-[0.98] cursor-pointer"
               >
                 <div className="flex items-center gap-6">

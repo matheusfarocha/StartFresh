@@ -1,15 +1,30 @@
 import { useNavigate } from 'react-router-dom'
 import Icon from '../components/Icon'
+import { useApp } from '../context/AppContext'
+import { generateRoadmap } from '../data/roadmapEngine'
 
 const needOptions = [
-  { label: 'A place to stay', icon: 'home', subtitle: '' },
-  { label: 'ID & Benefits', icon: 'badge', subtitle: 'Birth certificates, food stamps, etc.' },
-  { label: 'Finding work', icon: 'work', subtitle: '' },
-  { label: 'Mental health support', icon: 'psychology', subtitle: '' },
+  { label: 'A place to stay', icon: 'home', subtitle: '', key: 'housing' },
+  { label: 'ID & Benefits', icon: 'badge', subtitle: 'Birth certificates, food stamps, etc.', key: 'id' },
+  { label: 'Finding work', icon: 'work', subtitle: '', key: 'employment' },
+  { label: 'Mental health support', icon: 'psychology', subtitle: '', key: 'mentalHealth' },
 ]
 
 export default function QuestionUrgentNeed() {
   const navigate = useNavigate()
+  const { borough, timeAway, setNeeds, setRoadmap } = useApp()
+
+  const handleSelect = (needKey: string) => {
+    const needs = [needKey]
+    setNeeds(needs)
+    const roadmap = generateRoadmap({
+      borough: borough ?? 'default',
+      timeAway: timeAway ?? 'Less than 1 year',
+      needs,
+    })
+    setRoadmap(roadmap)
+    navigate('/generating')
+  }
 
   return (
     <main className="flex-grow flex flex-col items-center justify-center px-6 py-12 relative overflow-hidden">
@@ -61,7 +76,7 @@ export default function QuestionUrgentNeed() {
               {needOptions.map((option) => (
                 <button
                   key={option.label}
-                  onClick={() => navigate('/generating')}
+                  onClick={() => handleSelect(option.key)}
                   className="group flex items-center p-6 bg-surface-container-lowest hover:bg-primary-container/10 border-2 border-transparent hover:border-primary-container rounded-xl transition-all duration-300 text-left active:scale-[0.98] cursor-pointer"
                 >
                   <div className="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center mr-6 group-hover:bg-primary-container transition-colors">

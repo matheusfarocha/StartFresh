@@ -1,15 +1,18 @@
-// Making Roadmap Algorithim for the user to see their progress and what they have left to do. This will be a winding path with different steps along the way. Each step will have a different icon and color based on the category of the step. The user can click on the current step to mark it as completed and move on to the next step. The roadmap will also have a progress bar at the top to show how far along the user is in their journey.
-
-import { useState } from 'react'
-import { roadmapSteps } from '../data/roadmapSteps'
+import { useApp } from '../context/AppContext'
+import type { RoadmapSection } from '../data/roadmapEngine'
 
 type StepStatus = 'completed' | 'current' | 'upcoming' | 'locked'
 
-const stepIcons: Record<string, string> = {
-  'ID & Benefits': 'badge',
-  Employment: 'work',
-  Finance: 'account_balance',
-  Wellness: 'favorite',
+// Maps section keys from the engine to Material Symbol icon names
+const sectionIcons: Record<string, string> = {
+  id:           'badge',
+  housing:      'house',
+  food:         'restaurant',
+  employment:   'work',
+  mentalHealth: 'psychology',
+  family:       'family_restroom',
+  education:    'school',
+  community:    'groups',
 }
 
 const stepOffsets = [
@@ -23,8 +26,39 @@ const stepOffsets = [
   'translate-x-12',
 ]
 
+interface FlatStep {
+  id: string
+  title: string
+  category: string
+  sectionKey: string
+  detail: string
+  time: string
+}
+
+function flattenSections(sections: RoadmapSection[]): FlatStep[] {
+  const flat: FlatStep[] = []
+  for (const section of sections) {
+    for (const step of section.steps) {
+      flat.push({
+        id: step.id,
+        title: step.text,
+        category: section.label,
+        sectionKey: section.key,
+        detail: step.detail,
+        time: step.time,
+      })
+    }
+  }
+  return flat
+}
+
 export default function Roadmap() {
-  const [currentStep, setCurrentStep] = useState(1)
+  const { roadmap, currentStep, setCurrentStep } = useApp()
+
+  const allSteps: FlatStep[] = roadmap ? flattenSections(roadmap.sections) : []
+  const totalSteps = allSteps.length
+  const progressPercent = totalSteps > 0 ? Math.round((currentStep / totalSteps) * 100) : 0
+  const currentStepData = allSteps[currentStep]
 
   const getStatus = (index: number): StepStatus => {
     if (index < currentStep) return 'completed'
@@ -33,14 +67,18 @@ export default function Roadmap() {
     return 'locked'
   }
 
-  const totalSteps = roadmapSteps.length
-  const progressPercent = Math.round((currentStep / totalSteps) * 100)
-  const currentStepData = roadmapSteps[currentStep]
-
   const handleStepClick = (index: number) => {
     if (getStatus(index) === 'current') {
       setCurrentStep((prev) => Math.min(prev + 1, totalSteps - 1))
     }
+  }
+
+  if (!roadmap || allSteps.length === 0) {
+    return (
+      <main className="flex items-center justify-center min-h-screen">
+        <p className="text-on-surface-variant font-headline text-lg">No roadmap yet — complete the questions first.</p>
+      </main>
+    )
   }
 
   return (
@@ -71,16 +109,15 @@ export default function Roadmap() {
             </svg>
           </div>
 
-          {roadmapSteps.map((step, index) => {
+          {allSteps.map((step, index) => {
             const status = getStatus(index)
-            const icon = stepIcons[step.category] || 'task_alt'
+            const icon = sectionIcons[step.sectionKey] || 'task_alt'
             const offset = stepOffsets[index % stepOffsets.length]
 
             // Mascot bubble after first completed step
             if (index === 1 && currentStep >= 1) {
               return (
                 <div key={`group-${step.id}`}>
-                  {/* Mascot Interaction */}
                   <div className="relative w-full flex justify-end px-4 mb-16 translate-x-4">
                     <div className="flex items-center gap-4 bg-surface-container-lowest p-4 rounded-lg shadow-[0_4px_0_0_#bcb9b3] max-w-[240px]">
                       <div className="shrink-0 w-12 h-12 bg-[#fdc003] rounded-full flex items-center justify-center overflow-hidden">
@@ -160,7 +197,7 @@ export default function Roadmap() {
 /* ── Step Node Component ── */
 
 interface StepNodeProps {
-  step: (typeof roadmapSteps)[number]
+  step: FlatStep
   index: number
   status: StepStatus
   icon: string
