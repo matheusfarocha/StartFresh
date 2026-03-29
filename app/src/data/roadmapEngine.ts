@@ -367,6 +367,20 @@ export function generateRoadmap(inputs: RoadmapInputs): GeneratedRoadmap {
   }
 
   sections.sort((a, b) => b.score - a.score)
+
+  // Cap total steps at 10 — trim from lowest-priority sections
+  let totalSteps = sections.reduce((sum, s) => sum + s.steps.length, 0)
+  while (totalSteps > 10 && sections.length > 0) {
+    const last = sections[sections.length - 1]
+    if (last.steps.length <= totalSteps - 10) {
+      totalSteps -= last.steps.length
+      sections.pop()
+    } else {
+      last.steps = last.steps.slice(0, last.steps.length - (totalSteps - 10))
+      totalSteps = 10
+    }
+  }
+
   return { sections, borough, timeAway, generatedAt: new Date().toISOString() }
 }
 

@@ -21,14 +21,14 @@ const sectionIcons: Record<string, string> = {
 }
 
 const stepOffsets = [
-  '-translate-x-12',
-  'translate-x-12',
-  '-translate-x-8',
-  'translate-x-6',
-  '-translate-x-12',
+  '-translate-x-20',
+  'translate-x-20',
+  '-translate-x-14',
   'translate-x-10',
-  '-translate-x-6',
-  'translate-x-12',
+  '-translate-x-20',
+  'translate-x-16',
+  '-translate-x-10',
+  'translate-x-20',
 ]
 
 interface FlatStep {
@@ -192,12 +192,6 @@ export default function Roadmap() {
 
         {/* Winding Path UI */}
         <div className="relative flex flex-col items-center py-10">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none opacity-20">
-            <svg className="w-full h-full fill-none stroke-outline-variant stroke-[12]" style={{ strokeDasharray: 12 }} viewBox="0 0 200 800">
-              <path d="M100,0 C150,100 50,200 100,300 C150,400 50,500 100,600 C150,700 50,800 100,900" />
-            </svg>
-          </div>
-
           {allSteps.map((step, index) => {
             const status = getStatus(index)
             const icon = sectionIcons[step.sectionKey] || 'task_alt'
@@ -371,7 +365,7 @@ function StepNode({ step, status, icon, offset, onCardClick, onUndo }: StepNodeP
 
   if (status === 'completed') {
     return (
-      <div className={`relative w-full flex justify-center mb-20 ${offset}`}>
+      <div className={`relative z-10 w-full flex justify-center mb-28 ${offset}`}>
         <div className="relative overflow-visible p-3 -m-3">
           <button
             onClick={onCardClick}
@@ -395,7 +389,7 @@ function StepNode({ step, status, icon, offset, onCardClick, onUndo }: StepNodeP
 
   if (status === 'current') {
     return (
-      <div className={`relative w-full flex justify-center mb-24 ${offset}`}>
+      <div className={`relative z-10 w-full flex justify-center mb-32 ${offset}`}>
         <div className="relative">
           <button
             onClick={onCardClick}
@@ -414,7 +408,7 @@ function StepNode({ step, status, icon, offset, onCardClick, onUndo }: StepNodeP
 
   if (status === 'upcoming') {
     return (
-      <div className={`relative w-full flex justify-center mb-24 ${offset} opacity-60`}>
+      <div className={`relative z-10 w-full flex justify-center mb-24 ${offset} opacity-60`}>
         <div className="relative">
           <div className="w-24 h-24 bg-surface-container-highest rounded-lg flex items-center justify-center shadow-[0_6px_0_0_#bcb9b3] border-4 border-white">
             <span className="material-symbols-outlined text-outline text-4xl">{icon}</span>
@@ -428,7 +422,7 @@ function StepNode({ step, status, icon, offset, onCardClick, onUndo }: StepNodeP
   }
 
   return (
-    <div className={`relative w-full flex justify-center mb-12 ${offset} opacity-40`}>
+    <div className={`relative z-10 w-full flex justify-center mb-20 ${offset} opacity-40`}>
       <div className="relative">
         <div className="w-24 h-24 bg-surface-container-highest rounded-lg flex items-center justify-center shadow-[0_6px_0_0_#bcb9b3] border-4 border-white">
           <span className="material-symbols-outlined text-outline text-4xl">{icon}</span>

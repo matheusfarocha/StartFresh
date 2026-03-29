@@ -8,6 +8,7 @@ import GeneratingRoadmap from './pages/GeneratingRoadmap'
 import Roadmap from './pages/Roadmap'
 import Resources from './pages/Resources'
 import Community from './pages/Community'
+import CommunityThread from './pages/CommunityThread'
 import Profile from './pages/Profile'
 import CustomRoadmap from './pages/CustomRoadmap'
 import FollowUpQuestions from './pages/FollowUpQuestions'
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="/customroadmap" element={<CustomRoadmap />} />
         <Route path="/resources" element={<Resources />} />
         <Route path="/community" element={<Community />} />
+        <Route path="/community/:postId" element={<CommunityThread />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

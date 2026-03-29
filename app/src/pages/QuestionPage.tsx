@@ -154,7 +154,7 @@ export default function QuestionPage() {
                 disabled={multiSelected.length === 0}
                 className="w-full py-5 bg-primary text-on-primary font-headline font-bold text-xl rounded-xl shadow-[0_4px_0_0_#7a3c00] active:shadow-none active:translate-y-1 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
-                Build My Roadmap →
+                Next →
               </button>
             </>
           )}
