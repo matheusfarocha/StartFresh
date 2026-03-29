@@ -269,21 +269,40 @@ function computeScore(key: string, inputs: RoadmapInputs): number {
   const BASE: Record<string, number> = { emergency: 0, id: 100, phone: 95, housing: 90, food: 85, employment: 70, mentalHealth: 65, legal: 75, family: 55, education: 45, community: 40 }
   let score = BASE[key] ?? 50
 
+  // ── Survival tier (absolute priorities) ──────────────────────
+  // Hungry + no shelter = nothing else matters until these are handled
+  // Target order: Food (if starving) → Shelter → Phone → ID → everything else
+
   if (needs.includes(key)) score += 20
-  if (key === 'id') { score = hasID === 'yes' ? 50 : 999 }
-  if (key === 'emergency') score = 9999
+
+  if (key === 'food') {
+    if (foodSituation === 'none') score = 10000     // #1 absolute — get food NOW
+    else if (foodSituation === 'sometimes') score += 15
+    else if (foodSituation === 'ok') score -= 20
+  }
+
+  if (key === 'emergency') {
+    score = foodSituation === 'none' ? 9999 : 10000 // shelter is #1 unless also starving
+  }
+
   if (key === 'housing') {
-    if (housingStatus === 'nowhere') score = 998
+    if (housingStatus === 'nowhere') score = 9998    // right after emergency shelter
     else if (housingStatus === 'temporary') score += 30
     else if (housingStatus === 'shelter') score += 10
     else if (housingStatus === 'stable') score -= 20
   }
-  if (key === 'food') {
-    if (foodSituation === 'none') score += 30  // hungry now → near top
-    else if (foodSituation === 'sometimes') score += 10
-    else if (foodSituation === 'ok') score -= 20
-    if (housingStatus === 'nowhere') score += 15
+
+  if (key === 'phone') {
+    if (inputs.hasPhone === 'no') score = 997        // after survival, before ID
+    else if (inputs.hasPhone === 'basic') score = 80
   }
+
+  if (key === 'id') {
+    if (hasID === 'yes') score = 50
+    else score = 996                                  // after phone
+  }
+
+  // ── Everything else ────────────────────────────────────────
   if (key === 'mentalHealth') {
     if (timeAway === '15+ years') score += 25
     else if (timeAway === '5-15 years') score += 15
@@ -300,10 +319,6 @@ function computeScore(key: string, inputs: RoadmapInputs): number {
     else if (timeAway === '5-15 years') score += 10
   }
   if (key === 'employment' && housingStatus === 'nowhere') score -= 15
-  if (key === 'phone') {
-    if (inputs.hasPhone === 'no') score = 997  // right after emergency/ID — can't do anything without a phone
-    else if (inputs.hasPhone === 'basic') score = 80
-  }
 
   return score
 }

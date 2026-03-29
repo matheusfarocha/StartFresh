@@ -30,40 +30,46 @@ export default function Header({ disabled }: HeaderProps) {
     )
   }
 
+  const isLanding = pathname === '/'
+
   return (
     <header className="sticky top-0 z-50 flex justify-between items-center w-full max-w-screen-xl mx-auto bg-surface-container-low rounded-b-xl px-6 py-4 shadow-[0_24px_48px_-12px_rgba(55,56,49,0.06)]">
-      <Link to={logoTo} className="text-2xl font-extrabold text-primary font-headline">
+      <Link to={isLanding ? '/' : logoTo} className="text-2xl font-extrabold text-primary font-headline">
         FreshStart
       </Link>
 
-      <nav className="hidden md:flex items-center gap-2">
-        {disabled ? (
-          <>
-            <span className="text-on-background font-medium opacity-50 cursor-not-allowed px-4 py-2">Home</span>
-            <span className="text-on-background font-medium opacity-50 cursor-not-allowed px-4 py-2">Roadmap</span>
-            <span className="text-on-background font-medium opacity-50 cursor-not-allowed px-4 py-2">Resources</span>
-            <span className="text-on-background font-medium opacity-50 cursor-not-allowed px-4 py-2">Community</span>
-          </>
-        ) : (
-          <>
-            {navLink('/home', 'Home')}
-            {navLink(roadmap ? '/roadmap' : '/question/userType', 'Roadmap')}
-            {navLink('/resources', 'Resources')}
-            {navLink('/community', 'Community')}
-          </>
-        )}
-      </nav>
+      {!isLanding && (
+        <nav className="hidden md:flex items-center gap-2">
+          {disabled ? (
+            <>
+              <span className="text-on-background font-medium opacity-50 cursor-not-allowed px-4 py-2">Home</span>
+              <span className="text-on-background font-medium opacity-50 cursor-not-allowed px-4 py-2">Roadmap</span>
+              <span className="text-on-background font-medium opacity-50 cursor-not-allowed px-4 py-2">Resources</span>
+              <span className="text-on-background font-medium opacity-50 cursor-not-allowed px-4 py-2">Community</span>
+            </>
+          ) : (
+            <>
+              {navLink('/home', 'Home')}
+              {navLink(roadmap ? '/roadmap' : '/question/userType', 'Roadmap')}
+              {navLink('/resources', 'Resources')}
+              {navLink('/community', 'Community')}
+            </>
+          )}
+        </nav>
+      )}
 
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => navigate('/profile')}
-          className="flex items-center justify-center p-2 rounded-full hover:bg-primary-container/20 transition-colors active:scale-95 duration-200 cursor-pointer"
-        >
-          <span className="material-symbols-outlined text-primary" style={{ fontSize: 28 }}>
-            account_circle
-          </span>
-        </button>
-      </div>
+      {!isLanding && (
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate('/profile')}
+            className="flex items-center justify-center p-2 rounded-full hover:bg-primary-container/20 transition-colors active:scale-95 duration-200 cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-primary" style={{ fontSize: 28 }}>
+              account_circle
+            </span>
+          </button>
+        </div>
+      )}
     </header>
   )
 }

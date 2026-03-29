@@ -11,7 +11,7 @@ const SUGGESTIONS = [
   'Where do I start?',
   'I need a place to stay',
   'How do I get my ID?',
-  'What is FreshStart?',
+  'What is SageStart?',
 ]
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`
@@ -182,7 +182,7 @@ export default function ChatWidget() {
                 🌱
               </div>
               <div>
-                <h3 className="font-headline font-bold text-on-primary-container text-sm">Fresh</h3>
+                <h3 className="font-headline font-bold text-on-primary-container text-sm">Sage</h3>
                 <span className="text-[10px] text-on-primary-container/70 font-medium">Your reentry guide</span>
               </div>
             </div>
@@ -200,7 +200,7 @@ export default function ChatWidget() {
             {messages.length === 0 && (
               <div className="text-center py-6">
                 <div className="text-4xl mb-3">🌱</div>
-                <h4 className="font-headline font-bold text-on-surface text-lg mb-1">Hey, I'm Fresh</h4>
+                <h4 className="font-headline font-bold text-on-surface text-lg mb-1">Hey, I'm Sage</h4>
                 <p className="text-sm text-on-surface-variant leading-relaxed max-w-[260px] mx-auto">
                   I'm here to help you navigate your reentry. Ask me anything about IDs, housing, jobs, or your roadmap.
                 </p>
@@ -258,7 +258,7 @@ export default function ChatWidget() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask Fresh anything..."
+                placeholder="Ask Sage anything..."
                 disabled={streaming}
                 className="flex-grow bg-surface-container-highest rounded-full px-4 py-2.5 text-sm text-on-surface placeholder:text-outline-variant outline-none focus:ring-2 focus:ring-primary-container disabled:opacity-50 font-body"
               />
