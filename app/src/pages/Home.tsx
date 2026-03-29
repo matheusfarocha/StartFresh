@@ -120,21 +120,20 @@ export default function Home() {
       </section>
 
       {/* Encouragement Banner */}
-      <section className="mt-12">
-        <div className="relative bg-[#007164] rounded-lg shadow-[0_5px_0_0_#00493f] overflow-hidden p-8">
+      <section className="mt-20">
+        <div className="relative bg-surface-container-low rounded-lg shadow-[0_5px_0_0_#bcb9b3] overflow-hidden p-8 border border-outline-variant/10">
           {/* Decorative circles */}
-          <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white/10" />
-          <div className="absolute -bottom-10 right-8 w-28 h-28 rounded-full bg-white/10" />
-          <div className="absolute top-6 right-24 w-12 h-12 rounded-full bg-white/10" />
+          <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-secondary-container/20" />
+          <div className="absolute -bottom-10 right-8 w-28 h-28 rounded-full bg-primary-container/15" />
 
           <div className="relative z-10">
-            <p className="text-white/60 text-xs font-bold uppercase tracking-widest mb-3">Daily Reminder</p>
-            <p className="text-white font-headline font-extrabold text-2xl leading-snug mb-4">
+            <p className="text-on-surface-variant text-xs font-bold uppercase tracking-widest mb-3">Daily Reminder</p>
+            <p className="text-on-surface font-headline font-extrabold text-2xl leading-snug mb-4">
               Every step forward counts,<br />no matter how small.
             </p>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-base">🌱</div>
-              <p className="text-white/70 text-sm">You've got a whole city rooting for you.</p>
+              <div className="w-8 h-8 rounded-full bg-secondary-container/30 flex items-center justify-center text-base">🌱</div>
+              <p className="text-on-surface-variant text-sm">You've got a whole city rooting for you.</p>
             </div>
           </div>
         </div>

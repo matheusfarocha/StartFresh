@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FreshStart — Pitch Deck</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --primary: #9d4f00;
+    --secondary: #007164;
+    --tertiary: #fdc003;
+    --bg: #fdf8f0;
+    --bg-dark: #1a1a18;
+    --text: #1c1b1a;
+    --text-light: #4a4741;
+  }
+  body { font-family: 'Be Vietnam Pro', sans-serif; background: var(--bg-dark); color: var(--text); overflow: hidden; height: 100vh; width: 100vw; }
+  h1, h2, h3, h4 { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    padding: 60px 80px;
+    opacity: 0; transform: translateX(60px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    pointer-events: none; overflow: hidden;
+  }
+  .slide.active { opacity: 1; transform: translateX(0); pointer-events: all; }
+  .slide.exit { opacity: 0; transform: translateX(-60px); }
+
+  /* Nav */
+  .nav {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 12px; z-index: 100;
+    background: rgba(0,0,0,0.35); backdrop-filter: blur(12px);
+    padding: 10px 20px; border-radius: 50px;
+  }
+  .nav-dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.25); border: none; cursor: pointer; transition: all 0.3s; }
+  .nav-dot.active { background: var(--tertiary); transform: scale(1.3); }
+  .nav-arrow { background: none; border: none; color: rgba(255,255,255,0.6); font-size: 20px; cursor: pointer; padding: 4px; transition: color 0.2s; }
+  .nav-arrow:hover { color: white; }
+  .slide-counter { color: rgba(255,255,255,0.5); font-size: 12px; font-weight: 600; min-width: 40px; text-align: center; }
+
+  /* ── Slide 1: Title ── */
+  .slide-title {
+    background: var(--bg);
+    text-align: center;
+  }
+  .slide-title::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 30% 20%, rgba(157,79,0,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 80%, rgba(0,113,100,0.06) 0%, transparent 60%);
+  }
+  .title-logo {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800; font-size: 90px; letter-spacing: -3px;
+    color: var(--primary); margin-bottom: 20px; position: relative;
+  }
+  .title-logo span { color: var(--secondary); }
+  .title-tagline {
+    font-size: 24px; color: var(--text-light); font-weight: 500;
+    max-width: 620px; line-height: 1.5; position: relative; margin-bottom: 40px;
+  }
+  .title-pills {
+    display: flex; gap: 12px; position: relative; flex-wrap: wrap; justify-content: center;
+  }
+  .title-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 22px; border-radius: 50px;
+    font-weight: 700; font-size: 13px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .title-pill:nth-child(1) { background: var(--primary); color: white; box-shadow: 0 4px 0 0 #612f00; }
+  .title-pill:nth-child(2) { background: var(--secondary); color: white; box-shadow: 0 4px 0 0 #004d44; }
+  .title-pill:nth-child(3) { background: white; color: var(--text); box-shadow: 0 4px 0 0 rgba(0,0,0,0.08); }
+  .title-pill .material-symbols-outlined { font-size: 18px; }
+
+  /* ── Slide 2: Problem ── */
+  .slide-problem {
+    background: var(--bg-dark); color: white; text-align: center;
+  }
+  .problem-top { margin-bottom: 50px; }
+  .problem-stat {
+    font-family: 'Plus Jakarta Sans'; font-weight: 800; font-size: 130px;
+    color: var(--tertiary); line-height: 1; letter-spacing: -5px;
+  }
+  .problem-label {
+    font-size: 24px; font-weight: 600; color: rgba(255,255,255,0.85); margin-top: 8px;
+  }
+  .problem-cards { display: flex; gap: 28px; max-width: 1000px; }
+  .problem-card {
+    flex: 1; text-align: center; padding: 32px 24px;
+    background: rgba(255,255,255,0.04); border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+  .problem-card .material-symbols-outlined { font-size: 40px; margin-bottom: 14px; display: block; }
+  .problem-card:nth-child(1) .material-symbols-outlined { color: #ff8a65; }
+  .problem-card:nth-child(2) .material-symbols-outlined { color: var(--tertiary); }
+  .problem-card:nth-child(3) .material-symbols-outlined { color: #ef5350; }
+  .problem-card h4 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .problem-card p { font-size: 14px; color: rgba(255,255,255,0.5); line-height: 1.6; }
+
+  /* ── Slide 3: Solution ── */
+  .slide-solution { background: var(--bg); }
+  .slide-solution::before {
+    content: ''; position: absolute;
+    top: -200px; right: -200px; width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(0,113,100,0.1) 0%, transparent 70%); border-radius: 50%;
+  }
+  .sol-grid { display: flex; gap: 48px; align-items: center; max-width: 1100px; position: relative; }
+  .sol-left { flex: 1.1; }
+  .section-tag {
+    display: inline-block; color: white;
+    padding: 6px 16px; border-radius: 50px;
+    font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
+    margin-bottom: 20px; font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .sol-left h2 {
+    font-size: 46px; font-weight: 800; letter-spacing: -1.5px;
+    line-height: 1.12; margin-bottom: 20px;
+  }
+  .sol-left h2 em { font-style: normal; color: var(--secondary); }
+  .sol-left > p { font-size: 16px; color: var(--text-light); line-height: 1.7; max-width: 460px; }
+  .sol-right { flex: 1; display: flex; flex-direction: column; gap: 14px; }
+  .sol-card {
+    background: white; padding: 22px 24px; border-radius: 16px;
+    display: flex; align-items: flex-start; gap: 16px;
+    box-shadow: 0 4px 0 0 rgba(0,0,0,0.05);
+  }
+  .sol-card .material-symbols-outlined {
+    font-size: 26px; padding: 10px; border-radius: 12px; flex-shrink: 0;
+  }
+  .sol-card:nth-child(1) .material-symbols-outlined { background: #ffecd6; color: var(--primary); }
+  .sol-card:nth-child(2) .material-symbols-outlined { background: #d6f5f0; color: var(--secondary); }
+  .sol-card:nth-child(3) .material-symbols-outlined { background: #fff4cc; color: #8a6d00; }
+  .sol-card:nth-child(4) .material-symbols-outlined { background: #fce4ec; color: #c62828; }
+  .sol-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+  .sol-card p { font-size: 12.5px; color: var(--text-light); line-height: 1.5; }
+  .sol-card .data { font-size: 11px; font-weight: 700; color: var(--primary); margin-top: 4px; display: block; }
+
+  /* ── Slide 4: Demo ── */
+  .slide-demo { background: var(--bg-dark); color: white; text-align: center; }
+  .demo-header { margin-bottom: 36px; }
+  .demo-header h2 { font-size: 42px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 8px; }
+  .demo-header p { font-size: 16px; color: rgba(255,255,255,0.5); }
+  .demo-frame {
+    width: 820px; max-width: 90vw; aspect-ratio: 16/9;
+    background: rgba(255,255,255,0.04);
+    border: 2px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .demo-frame video, .demo-frame iframe {
+    width: 100%; height: 100%; border: none; border-radius: 18px;
+  }
+  .demo-placeholder {
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    color: rgba(255,255,255,0.3);
+  }
+  .demo-placeholder .material-symbols-outlined { font-size: 64px; }
+  .demo-placeholder p { font-size: 14px; }
+  .demo-placeholder .hint {
+    font-size: 11px; color: rgba(255,255,255,0.2);
+    margin-top: 8px; max-width: 400px; line-height: 1.5;
+  }
+
+  /* ── Slide 5: Close ── */
+  .slide-close {
+    background: var(--bg); text-align: center; position: relative; height: 100vh;
+  }
+  .slide-close::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 40% 40%, rgba(157,79,0,0.07) 0%, transparent 55%),
+                radial-gradient(ellipse at 65% 70%, rgba(0,113,100,0.06) 0%, transparent 55%);
+  }
+  .close-content { position: relative; max-width: 750px; }
+  .close-content h2 {
+    font-size: 56px; font-weight: 800; letter-spacing: -2px;
+    line-height: 1.1; margin-bottom: 20px; color: var(--text);
+  }
+  .close-content h2 em { font-style: normal; color: var(--primary); }
+  .close-content h2 span { color: var(--secondary); }
+  .close-content > p {
+    font-size: 18px; color: var(--text-light); line-height: 1.7;
+    max-width: 540px; margin: 0 auto 44px;
+  }
+  .close-stats {
+    display: flex; gap: 32px; justify-content: center; margin-bottom: 44px;
+  }
+  .close-stat {
+    background: white; padding: 24px 32px; border-radius: 16px;
+    box-shadow: 0 4px 0 0 rgba(0,0,0,0.06); min-width: 160px;
+  }
+  .close-stat .num {
+    font-family: 'Plus Jakarta Sans'; font-weight: 800; font-size: 40px; line-height: 1;
+  }
+  .close-stat:nth-child(1) .num { color: var(--primary); }
+  .close-stat:nth-child(2) .num { color: var(--secondary); }
+  .close-stat:nth-child(3) .num { color: #8a6d00; }
+  .close-stat p { font-size: 13px; color: var(--text-light); margin-top: 4px; font-weight: 500; }
+  .close-vision {
+    display: flex; gap: 16px; justify-content: center; margin-bottom: 40px;
+  }
+  .close-vision-card {
+    background: white; padding: 20px 24px; border-radius: 14px;
+    box-shadow: 0 3px 0 0 rgba(0,0,0,0.05);
+    text-align: left; max-width: 220px; position: relative; overflow: hidden;
+  }
+  .close-vision-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  }
+  .close-vision-card:nth-child(1)::before { background: var(--primary); }
+  .close-vision-card:nth-child(2)::before { background: var(--secondary); }
+  .close-vision-card:nth-child(3)::before { background: var(--tertiary); }
+  .close-vision-card h4 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .close-vision-card p { font-size: 11px; color: var(--text-light); line-height: 1.5; }
+  .close-footer {
+    font-size: 13px; color: var(--text-light); opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+
+<div id="deck">
+
+  <!-- Slide 1: Intro -->
+  <div class="slide slide-title active" data-index="0">
+    <div class="title-logo">Fresh<span>Start</span></div>
+    <p class="title-tagline">A personalized guide for the 72 hours that decide whether someone rejoins urban life — or cycles back through the system.</p>
+    <div class="title-pills">
+      <div class="title-pill">
+        <span class="material-symbols-outlined">location_city</span>
+        Built for NYC
+      </div>
+      <div class="title-pill">
+        <span class="material-symbols-outlined">route</span>
+        Personalized Roadmaps
+      </div>
+      <div class="title-pill">
+        <span class="material-symbols-outlined">group</span>
+        Community Powered
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 2: Problem -->
+  <div class="slide slide-problem" data-index="1">
+    <div class="problem-top">
+      <div class="problem-stat">640K+</div>
+      <div class="problem-label">people released from U.S. jails & prisons every year</div>
+    </div>
+    <div class="problem-cards">
+      <div class="problem-card">
+        <span class="material-symbols-outlined">schedule</span>
+        <h4>The 72-Hour Window</h4>
+        <p>The first 3 days are the most critical — and the most chaotic. No phone, no ID, often nowhere to sleep.</p>
+      </div>
+      <div class="problem-card">
+        <span class="material-symbols-outlined">description</span>
+        <h4>Outdated Resources</h4>
+        <p>Existing help is scattered across PDFs, pamphlets, and 311 hold queues. Nothing personalized. Nothing current.</p>
+      </div>
+      <div class="problem-card">
+        <span class="material-symbols-outlined">replay</span>
+        <h4>67% Re-Arrested</h4>
+        <p>Two-thirds are re-arrested within 3 years. The #1 predictor: no stable housing or employment in the first weeks.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 3: Solution -->
+  <div class="slide slide-solution" data-index="2">
+    <div class="sol-grid">
+      <div class="sol-left">
+        <div class="section-tag" style="background:var(--secondary)">The Solution</div>
+        <h2>Answer a few questions. Get <em>your plan.</em></h2>
+        <p>FreshStart asks about your situation and builds a step-by-step roadmap with real NYC resources — prioritized by survival first, everything else after.</p>
+      </div>
+      <div class="sol-right">
+        <div class="sol-card">
+          <span class="material-symbols-outlined">route</span>
+          <div>
+            <h4>Personalized Roadmap</h4>
+            <p>A unique action plan based on your answers — no two roadmaps are the same.</p>
+            <span class="data">60% of returning citizens are unemployed at 1 year — we surface job programs first if that's your need</span>
+          </div>
+        </div>
+        <div class="sol-card">
+          <span class="material-symbols-outlined">pin_drop</span>
+          <div>
+            <h4>Real Resources, Real Addresses</h4>
+            <p>Borough-specific shelters, DMV offices, food pantries, and legal aid — not links, directions.</p>
+            <span class="data">43% of NYC prison releases go directly to shelters — we route you to the right intake center</span>
+          </div>
+        </div>
+        <div class="sol-card">
+          <span class="material-symbols-outlined">forum</span>
+          <div>
+            <h4>Community Support</h4>
+            <p>A peer feed to ask questions, share wins, and hear from people who've been through it.</p>
+            <span class="data">Most returning citizens have never used a smartphone — the app is built for first-time users</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 4: Demo -->
+  <div class="slide slide-demo" data-index="3">
+    <div class="demo-header">
+      <div class="section-tag" style="background:var(--primary)">Live Demo</div>
+      <h2>See FreshStart in action</h2>
+      <p>From onboarding to a personalized roadmap in under 2 minutes</p>
+    </div>
+    <div class="demo-frame">
+      <!-- Replace the placeholder below with your video:
+           Option A — local file:  <video src="demo.mp4" controls></video>
+           Option B — YouTube:     <iframe src="https://www.youtube.com/embed/VIDEO_ID" allowfullscreen></iframe>
+           Option C — Loom:        <iframe src="https://www.loom.com/embed/VIDEO_ID" allowfullscreen></iframe>
+      -->
+      <div class="demo-placeholder">
+        <span class="material-symbols-outlined">play_circle</span>
+        <p>Drop your demo video here</p>
+        <p class="hint">Replace the placeholder in pitch-deck.html with a &lt;video&gt; or &lt;iframe&gt; tag. Supports MP4, YouTube, or Loom embeds.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 5: Close -->
+  <div class="slide slide-close" data-index="4">
+    <div class="close-content">
+      <h2>Better reentry.<br><em>Better</em> <span>city.</span></h2>
+      <p>Every person who finds housing, gets their ID, and lands a job is a family reunited, a shelter bed freed, and half a million dollars not spent on re-incarceration. FreshStart makes the first 72 hours navigable.</p>
+      <div class="close-stats">
+        <div class="close-stat">
+          <div class="num">$556K</div>
+          <p>NYC spends per inmate/year</p>
+        </div>
+        <div class="close-stat">
+          <div class="num">22K</div>
+          <p>people return to NYC annually</p>
+        </div>
+        <div class="close-stat">
+          <div class="num">$4-7</div>
+          <p>returned per $1 in reentry</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="nav">
+  <button class="nav-arrow" id="prev">&#8592;</button>
+  <span class="slide-counter" id="counter">1 / 5</span>
+  <div id="dots"></div>
+  <button class="nav-arrow" id="next">&#8594;</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let current = 0;
+  const counter = document.getElementById('counter');
+  const dotsContainer = document.getElementById('dots');
+
+  for (let i = 0; i < total; i++) {
+    const dot = document.createElement('button');
+    dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => goTo(i));
+    dotsContainer.appendChild(dot);
+  }
+  const dots = dotsContainer.querySelectorAll('.nav-dot');
+
+  function goTo(index) {
+    if (index < 0 || index >= total || index === current) return;
+    const prev = current;
+    slides[prev].classList.remove('active');
+    slides[prev].classList.add('exit');
+    setTimeout(() => slides[prev].classList.remove('exit'), 500);
+    current = index;
+    slides[current].classList.add('active');
+    dots.forEach((d, i) => d.classList.toggle('active', i === current));
+    counter.textContent = `${current + 1} / ${total}`;
+  }
+
+  document.getElementById('prev').addEventListener('click', () => goTo(current - 1));
+  document.getElementById('next').addEventListener('click', () => goTo(current + 1));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); goTo(current + 1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(current - 1); }
+  });
+</script>
+
+</body>
+</html>

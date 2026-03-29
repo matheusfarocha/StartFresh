@@ -237,7 +237,7 @@ function getEducationSteps(_inputs: RoadmapInputs): RoadmapStep[] {
 function getCommunitySteps(_inputs: RoadmapInputs): RoadmapStep[] {
   return [
     { id: 'c-1', text: 'Connect with Fortune Society\'s peer network', what: 'A community of people who\'ve been through what you\'re going through. Same experience, no judgment.', detail: 'Fortune Society — 29-76 Northern Blvd, LIC. (212) 691-7554. Drop-in welcome.', time: 'Right now' },
-    { id: 'c-2', text: 'Find a mentor', what: 'A formerly incarcerated person matched to your background who can guide you through the process.', detail: 'Free mentoring through FreshStart and Fortune Society. Matched to your borough and experience.', time: 'This week' },
+    { id: 'c-2', text: 'Find a mentor', what: 'A formerly incarcerated person matched to your background who can guide you through the process.', detail: 'Fortune Society offers free mentoring matched to your borough and experience. Call (212) 691-7554 to get connected.', time: 'This week' },
   ]
 }
 
@@ -325,7 +325,7 @@ function computeScore(key: string, inputs: RoadmapInputs): number {
 
 // ── Main export ──────────────────────────────────────────────────
 export function generateRoadmap(inputs: RoadmapInputs): GeneratedRoadmap {
-  const { timeAway, borough, needs, housingStatus, paroleProbation, hasID, foodSituation } = inputs
+  const { timeAway, borough, needs, housingStatus, paroleProbation, foodSituation } = inputs
   const sectionKeys = new Set(needs)
 
   // Always include ID

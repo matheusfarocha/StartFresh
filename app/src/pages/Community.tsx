@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import Icon from '../components/Icon'
 
-type PostType = 'question' | 'discussion' | 'alert'
+type PostType = 'question' | 'discussion'
 type FilterType = 'all' | PostType
 type SortType = 'recent' | 'trending'
 
@@ -23,7 +23,6 @@ interface Post {
 const TYPE_CONFIG: Record<PostType, { label: string; color: string; bg: string }> = {
   question:   { label: 'QUESTION',   color: 'text-primary',   bg: 'bg-primary-container/60' },
   discussion: { label: 'DISCUSSION', color: 'text-secondary', bg: 'bg-secondary-container/60' },
-  alert:      { label: 'ALERT',      color: 'text-error',     bg: 'bg-error-container/60' },
 }
 
 function timeAgo(date: string) {
@@ -75,7 +74,7 @@ function ComposeModal({ onClose, onPost, displayName }: {
 
         <div className="p-6">
           <div className="flex gap-2 mb-5">
-            {(['discussion', 'question', 'alert'] as PostType[]).map(t => {
+            {(['discussion', 'question'] as PostType[]).map(t => {
               const cfg = TYPE_CONFIG[t]
               const active = type === t
               return (
@@ -180,7 +179,6 @@ export default function Community() {
     { value: 'all', label: 'All' },
     { value: 'question', label: 'Questions' },
     { value: 'discussion', label: 'Discussions' },
-    { value: 'alert', label: 'Alerts' },
   ]
 
   const visible = [...posts]

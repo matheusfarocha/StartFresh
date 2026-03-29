@@ -92,13 +92,6 @@ export default function CustomRoadmap() {
 
   const handleConfirm = () => {
     // Build a GeneratedRoadmap from the custom steps
-    const iconToCategory: Record<string, string> = {
-      badge: 'ID & Documents', house: 'Housing', restaurant: 'Food & Benefits',
-      work: 'Employment', psychology: 'Mental Health', school: 'Education',
-      family_restroom: 'Family', groups: 'Community', gavel: 'Legal',
-      local_hospital: 'Health', account_balance: 'Finance', directions_bus: 'Transport',
-    }
-
     const roadmap: GeneratedRoadmap = {
       sections: [{
         key: 'custom',
@@ -110,6 +103,7 @@ export default function CustomRoadmap() {
         steps: steps.map((s, i) => ({
           id: `custom-${i + 1}`,
           text: s.title,
+          what: '',
           detail: s.detail || 'No additional instructions provided.',
           time: '',
         })),

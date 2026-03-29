@@ -28,7 +28,7 @@ const MASCOT_MESSAGES: Record<string, string> = {
 export default function QuestionPage() {
   const { questionId } = useParams<{ questionId: string }>()
   const navigate = useNavigate()
-  const { answers, setAnswer, setRoadmap } = useApp()
+  const { answers, setAnswer } = useApp()
   const [multiSelected, setMultiSelected] = useState<string[]>([])
 
   const question = questionId ? (QUESTION_BANK as any)[questionId] : null
@@ -48,7 +48,6 @@ export default function QuestionPage() {
   const mascotMsg = MASCOT_MESSAGES[questionId ?? ''] ?? question.sub ?? ''
 
   function handleSingle(value: string) {
-    const newAnswers = { ...answers, [questionId!]: value }
     setAnswer(questionId!, value)
 
     // Federal employees go to custom roadmap builder
@@ -73,7 +72,6 @@ export default function QuestionPage() {
 
   function handleMultiSubmit() {
     if (multiSelected.length === 0) return
-    const newAnswers = { ...answers, [questionId!]: multiSelected }
     setAnswer(questionId!, multiSelected)
     const next = (question as any).next(multiSelected)
     if (next === null) {

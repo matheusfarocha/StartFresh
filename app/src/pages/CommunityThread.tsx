@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 
-type PostType = 'question' | 'discussion' | 'alert'
+type PostType = 'question' | 'discussion'
 
 interface Post {
   id: string
@@ -11,9 +11,9 @@ interface Post {
   display_name: string | null
   type: PostType
   title: string
-  body: string
-  upvotes: number
+  content: string
   created_at: string
+  post_votes: { count: number }[]
 }
 
 interface Reply {
@@ -21,15 +21,13 @@ interface Reply {
   post_id: string
   user_id: string | null
   display_name: string | null
-  body: string
-  upvotes: number
+  content: string
   created_at: string
 }
 
 const TYPE_CONFIG: Record<PostType, { label: string; color: string; bg: string }> = {
   question:   { label: 'QUESTION',   color: 'text-[#9d4f00]',   bg: 'bg-[#9d4f00]/10' },
   discussion: { label: 'DISCUSSION', color: 'text-[#007164]', bg: 'bg-[#007164]/10' },
-  alert:      { label: 'ALERT',      color: 'text-red-600',     bg: 'bg-red-100' },
 }
 
 function timeAgo(date: string) {
@@ -64,8 +62,7 @@ export default function CommunityThread() {
   const [replies, setReplies] = useState<Reply[]>([])
   const [replyBody, setReplyBody] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [upvoted, setUpvoted] = useState(false)
-  const [upvotedReplies, setUpvotedReplies] = useState<Set<string>>(new Set())
+  const [userVoted, setUserVoted] = useState(false)
   const [loading, setLoading] = useState(true)
   const repliesEndRef = useRef<HTMLDivElement>(null)
 
@@ -74,11 +71,23 @@ export default function CommunityThread() {
 
     const load = async () => {
       const [{ data: postData }, { data: repliesData }] = await Promise.all([
-        supabase.from('posts').select('*').eq('id', postId).single(),
+        supabase.from('posts').select('*, post_votes(count)').eq('id', postId).single(),
         supabase.from('replies').select('*').eq('post_id', postId).order('created_at', { ascending: true }),
       ])
-      if (postData) setPost(postData)
+      if (postData) setPost(postData as Post)
       if (repliesData) setReplies(repliesData)
+
+      // Check if current user has voted on this post
+      if (user && postData) {
+        const { data: voteData } = await supabase
+          .from('post_votes')
+          .select('id')
+          .eq('post_id', postId)
+          .eq('user_id', user.id)
+          .maybeSingle()
+        setUserVoted(!!voteData)
+      }
+
       setLoading(false)
     }
     load()
@@ -105,24 +114,17 @@ export default function CommunityThread() {
 
   const handleUpvotePost = async () => {
     if (!post || !user) return
-    const delta = upvoted ? -1 : 1
-    setUpvoted(!upvoted)
-    setPost((p) => p ? { ...p, upvotes: p.upvotes + delta } : p)
-    await supabase.from('posts').update({ upvotes: post.upvotes + delta }).eq('id', post.id)
+    if (userVoted) {
+      setUserVoted(false)
+      setPost(p => p ? { ...p, post_votes: [{ count: (p.post_votes[0]?.count ?? 1) - 1 }] } : p)
+      await supabase.from('post_votes').delete().eq('post_id', post.id).eq('user_id', user.id)
+    } else {
+      setUserVoted(true)
+      setPost(p => p ? { ...p, post_votes: [{ count: (p.post_votes[0]?.count ?? 0) + 1 }] } : p)
+      await supabase.from('post_votes').insert({ post_id: post.id, user_id: user.id })
+    }
   }
 
-  const handleUpvoteReply = async (reply: Reply) => {
-    if (!user) return
-    const wasUpvoted = upvotedReplies.has(reply.id)
-    const delta = wasUpvoted ? -1 : 1
-    setUpvotedReplies((prev) => {
-      const next = new Set(prev)
-      wasUpvoted ? next.delete(reply.id) : next.add(reply.id)
-      return next
-    })
-    setReplies((prev) => prev.map((r) => r.id === reply.id ? { ...r, upvotes: r.upvotes + delta } : r))
-    await supabase.from('replies').update({ upvotes: reply.upvotes + delta }).eq('id', reply.id)
-  }
 
   const handleDeletePost = async () => {
     if (!post || !user || user.id !== post.user_id) return
@@ -138,15 +140,24 @@ export default function CommunityThread() {
   }
 
   const handleSubmitReply = async () => {
-    if (!replyBody.trim() || !postId) return
+    if (!replyBody.trim() || !postId || !user) return
     setSubmitting(true)
-    const name = user ? (displayName ?? user.email ?? 'Member') : 'Guest'
-    await supabase.from('replies').insert({
+    const name = displayName ?? user.email ?? 'Member'
+    const { data, error } = await supabase.from('replies').insert({
       post_id: postId,
-      user_id: user?.id ?? null,
+      user_id: user.id,
       display_name: name,
-      body: replyBody.trim(),
-      upvotes: 0,
+      content: replyBody.trim(),
+    }).select().single()
+    if (error) {
+      console.error('Reply error:', error)
+      setSubmitting(false)
+      return
+    }
+    // Add reply to state directly (don't rely on realtime alone)
+    setReplies(prev => {
+      if (prev.some(r => r.id === data.id)) return prev
+      return [...prev, data as Reply]
     })
     setReplyBody('')
     setSubmitting(false)
@@ -212,20 +223,20 @@ export default function CommunityThread() {
           </div>
 
           <h1 className="text-xl font-bold text-gray-900 mb-3">{post.title}</h1>
-          {post.body && <p className="text-gray-700 leading-relaxed mb-4">{post.body}</p>}
+          {post.content && <p className="text-gray-700 leading-relaxed mb-4">{post.content}</p>}
 
           {/* Upvote row */}
           <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
             <button
               onClick={handleUpvotePost}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold text-sm transition-all ${
-                upvoted
+                userVoted
                   ? 'bg-[#9d4f00] text-white shadow-[2px_2px_0px_#7a3c00]'
                   : 'bg-[#9d4f00]/10 text-[#9d4f00] hover:bg-[#9d4f00]/20'
               }`}
             >
               <span className="material-symbols-outlined text-base">thumb_up</span>
-              {post.upvotes}
+              {post.post_votes[0]?.count ?? 0}
             </button>
             <span className="text-sm text-gray-400 flex items-center gap-1">
               <span className="material-symbols-outlined text-base">chat_bubble_outline</span>
@@ -251,20 +262,9 @@ export default function CommunityThread() {
                     <span className="font-semibold text-sm text-gray-900">{reply.display_name ?? 'Guest'}</span>
                     <span className="text-xs text-gray-400">{timeAgo(reply.created_at)}</span>
                   </div>
-                  <p className="text-gray-700 text-sm leading-relaxed">{reply.body}</p>
-                  <div className="flex items-center gap-3 mt-2">
-                    <button
-                      onClick={() => handleUpvoteReply(reply)}
-                      className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full transition-all ${
-                        upvotedReplies.has(reply.id)
-                          ? 'bg-[#007164] text-white'
-                          : 'text-[#007164] hover:bg-[#007164]/10'
-                      }`}
-                    >
-                      <span className="material-symbols-outlined text-sm">thumb_up</span>
-                      {reply.upvotes}
-                    </button>
-                    {user && user.id === reply.user_id && (
+                  <p className="text-gray-700 text-sm leading-relaxed">{reply.content}</p>
+                  {user && user.id === reply.user_id && (
+                    <div className="flex items-center gap-3 mt-2">
                       <button
                         onClick={() => handleDeleteReply(reply)}
                         className="text-xs text-red-400 hover:text-red-600 flex items-center gap-1 transition-colors"
@@ -272,8 +272,8 @@ export default function CommunityThread() {
                         <span className="material-symbols-outlined text-sm">delete</span>
                         Delete
                       </button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -285,7 +285,7 @@ export default function CommunityThread() {
       {/* Sticky reply bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg px-4 py-3 z-50">
         <div className="max-w-2xl mx-auto flex items-end gap-2">
-          <Avatar name={user ? (displayName ?? user.email) : 'Guest'} size={36} />
+          <Avatar name={user ? (displayName ?? user.email ?? null) : 'Guest'} size={36} />
           <div className="flex-1 bg-gray-50 rounded-2xl border border-gray-200 px-4 py-2">
             <textarea
               value={replyBody}

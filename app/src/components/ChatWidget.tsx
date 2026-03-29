@@ -27,7 +27,7 @@ export default function ChatWidget() {
   const [showNudge, setShowNudge] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const nudgeTimer = useRef<ReturnType<typeof setTimeout>>()
+  const nudgeTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   // Build user context string from their answers + roadmap
   const userContext = useMemo(() => {

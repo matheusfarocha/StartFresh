@@ -177,19 +177,6 @@ export default function Roadmap() {
           </div>
         </section>
 
-        {/* Completion banner */}
-        {allDone && (
-          <div className="mb-12 bg-secondary-container p-8 rounded-xl text-center shadow-[0_6px_0_0_#00635d]">
-            <span className="material-symbols-outlined text-on-secondary-container text-6xl mb-4">celebration</span>
-            <h2 className="font-headline font-extrabold text-2xl text-on-secondary-container mb-2">
-              Congratulations!
-            </h2>
-            <p className="text-on-secondary-container leading-relaxed max-w-md mx-auto">
-              You've completed every step on your roadmap. Your fresh start is in full swing. Remember, you can always come back to review any step.
-            </p>
-          </div>
-        )}
-
         {/* Winding Path UI */}
         <div className="relative flex flex-col items-center py-10">
           {allSteps.map((step, index) => {
@@ -208,6 +195,19 @@ export default function Roadmap() {
             )
           })}
         </div>
+
+        {/* Completion banner */}
+        {allDone && (
+          <div className="mb-12 bg-secondary-container p-8 rounded-xl text-center shadow-[0_6px_0_0_#00635d]">
+            <span className="material-symbols-outlined text-on-secondary-container text-6xl mb-4">celebration</span>
+            <h2 className="font-headline font-extrabold text-2xl text-on-secondary-container mb-2">
+              Congratulations!
+            </h2>
+            <p className="text-on-secondary-container leading-relaxed max-w-md mx-auto">
+              You've completed every step on your roadmap. Your fresh start is in full swing. Remember, you can always come back to review any step.
+            </p>
+          </div>
+        )}
       </main>
 
       {/* Floating Action Button */}
