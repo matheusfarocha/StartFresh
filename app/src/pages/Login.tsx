@@ -53,6 +53,7 @@ export default function Login() {
       }
     }
 
+    window.scrollTo(0, 0)
     navigate('/home')
   }
 
