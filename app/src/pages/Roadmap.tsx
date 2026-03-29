@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import confetti from 'canvas-confetti'
 import { useApp } from '../context/AppContext'
+import { useAuth } from '../context/AuthContext'
 import type { RoadmapSection } from '../data/roadmapEngine'
 
 type StepStatus = 'completed' | 'current' | 'upcoming' | 'locked'
@@ -13,6 +15,7 @@ const sectionIcons: Record<string, string> = {
   family:       'family_restroom',
   education:    'school',
   community:    'groups',
+  custom:       'edit_note',
 }
 
 const stepOffsets = [
@@ -52,22 +55,58 @@ function flattenSections(sections: RoadmapSection[]): FlatStep[] {
   return flat
 }
 
+function fireConfetti() {
+  const duration = 3000
+  const end = Date.now() + duration
+
+  const frame = () => {
+    confetti({
+      particleCount: 3,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0, y: 0.7 },
+      colors: ['#9d4f00', '#ffaf75', '#007164', '#97f7e4', '#fdc003'],
+    })
+    confetti({
+      particleCount: 3,
+      angle: 120,
+      spread: 55,
+      origin: { x: 1, y: 0.7 },
+      colors: ['#9d4f00', '#ffaf75', '#007164', '#97f7e4', '#fdc003'],
+    })
+    if (Date.now() < end) requestAnimationFrame(frame)
+  }
+  frame()
+
+  // Big burst in the middle
+  setTimeout(() => {
+    confetti({
+      particleCount: 100,
+      spread: 100,
+      origin: { x: 0.5, y: 0.5 },
+      colors: ['#9d4f00', '#ffaf75', '#007164', '#97f7e4', '#fdc003'],
+    })
+  }, 300)
+}
+
 export default function Roadmap() {
   const { roadmap, currentStep, setCurrentStep } = useApp()
+  const { displayName } = useAuth()
   const [openStep, setOpenStep] = useState<number | null>(null)
   const [fullscreen, setFullscreen] = useState(false)
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
 
   const allSteps: FlatStep[] = roadmap ? flattenSections(roadmap.sections) : []
   const totalSteps = allSteps.length
-  const progressPercent = totalSteps > 0 ? Math.round((currentStep / totalSteps) * 100) : 0
-  const currentStepData = allSteps[currentStep]
+  const allDone = currentStep >= totalSteps
+  const progressPercent = totalSteps > 0 ? Math.round((Math.min(currentStep, totalSteps) / totalSteps) * 100) : 0
+  const currentStepData = allDone ? null : allSteps[currentStep]
 
   const getStatus = (index: number): StepStatus => {
     if (index < currentStep) return 'completed'
-    if (index === currentStep) return 'current'
+    if (index === currentStep && !allDone) return 'current'
     if (index === currentStep + 1) return 'upcoming'
-    return 'locked'
+    return allDone ? 'completed' : 'locked'
   }
 
   const handleCardClick = (index: number) => {
@@ -79,9 +118,15 @@ export default function Roadmap() {
   }
 
   const handleComplete = () => {
-    setCurrentStep(Math.min(currentStep + 1, totalSteps - 1))
+    const nextStep = currentStep + 1
+    setCurrentStep(nextStep)
     setOpenStep(null)
     setFullscreen(false)
+
+    // Last step completed — celebrate!
+    if (nextStep >= totalSteps) {
+      fireConfetti()
+    }
   }
 
   const handleUndo = (index: number) => {
@@ -110,19 +155,36 @@ export default function Roadmap() {
       <main className="pt-4 pb-32 min-h-screen px-6 max-w-2xl mx-auto relative">
         {/* Progress Overview */}
         <section className="mb-12 text-center">
-          <h1 className="text-4xl font-extrabold font-headline tracking-tighter text-on-surface mb-2">My Journey</h1>
+          <h1 className="text-4xl font-extrabold font-headline tracking-tighter text-on-surface mb-2">
+            {allDone ? 'Journey Complete!' : 'My Journey'}
+          </h1>
           <p className="text-on-surface-variant font-medium">
-            Step {currentStep + 1} of {totalSteps} &bull; {currentStepData?.category}
+            {allDone
+              ? `You did it${displayName ? ` ${displayName}` : ''}! Every step is complete.`
+              : <>Step {currentStep + 1} of {totalSteps} &bull; {currentStepData?.category}</>}
           </p>
           <div className="mt-6 w-full h-4 bg-surface-container-highest rounded-full overflow-hidden relative">
             <div
-              className="h-full bg-secondary rounded-full relative transition-all duration-700 ease-out"
+              className={`h-full rounded-full relative transition-all duration-700 ease-out ${allDone ? 'bg-secondary' : 'bg-secondary'}`}
               style={{ width: `${progressPercent}%` }}
             >
               <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent" />
             </div>
           </div>
         </section>
+
+        {/* Completion banner */}
+        {allDone && (
+          <div className="mb-12 bg-secondary-container p-8 rounded-xl text-center shadow-[0_6px_0_0_#00635d]">
+            <span className="material-symbols-outlined text-on-secondary-container text-6xl mb-4">celebration</span>
+            <h2 className="font-headline font-extrabold text-2xl text-on-secondary-container mb-2">
+              Congratulations!
+            </h2>
+            <p className="text-on-secondary-container leading-relaxed max-w-md mx-auto">
+              You've completed every step on your roadmap. Your fresh start is in full swing. Remember, you can always come back to review any step.
+            </p>
+          </div>
+        )}
 
         {/* Winding Path UI */}
         <div className="relative flex flex-col items-center py-10">
@@ -151,23 +213,23 @@ export default function Roadmap() {
       </main>
 
       {/* Floating Action Button */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-40">
-        <button
-          onClick={() => handleCardClick(currentStep)}
-          className="w-full py-5 bg-primary-container text-on-primary-container font-black text-xl rounded-lg shadow-[0_6px_0_0_#9d4f00] active:translate-y-1 active:shadow-[0_2px_0_0_#9d4f00] transition-all flex items-center justify-center gap-3 cursor-pointer font-headline"
-        >
-          <span>View Step {currentStep + 1}</span>
-          <span className="material-symbols-outlined font-bold">arrow_forward</span>
-        </button>
-      </div>
+      {!allDone && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-40">
+          <button
+            onClick={() => handleCardClick(currentStep)}
+            className="w-full py-5 bg-primary-container text-on-primary-container font-black text-xl rounded-lg shadow-[0_6px_0_0_#9d4f00] active:translate-y-1 active:shadow-[0_2px_0_0_#9d4f00] transition-all flex items-center justify-center gap-3 cursor-pointer font-headline"
+          >
+            <span>View Step {currentStep + 1}</span>
+            <span className="material-symbols-outlined font-bold">arrow_forward</span>
+          </button>
+        </div>
+      )}
 
       {/* Detail Panel / Guide */}
       {openStepData && (
         <div className={`fixed inset-0 z-[200] flex ${isMobile ? 'items-end justify-center' : 'justify-end'}`} onClick={closeDetail}>
-          {/* Backdrop */}
           <div className="absolute inset-0 bg-black/40" />
 
-          {/* Panel */}
           <div
             onClick={(e) => e.stopPropagation()}
             className={`relative bg-background overflow-y-auto transition-all duration-300 ease-out ${
@@ -180,7 +242,6 @@ export default function Roadmap() {
                   : 'w-full max-w-md h-full shadow-[-8px_0_40px_rgba(0,0,0,0.15)]'
             }`}
           >
-            {/* Top bar */}
             <div className="sticky top-0 bg-background z-10 py-3 px-6 flex items-center justify-end border-b border-outline-variant/10">
               {isMobile && !fullscreen && (
                 <div className="w-10 h-1 bg-outline-variant/40 rounded-full absolute left-1/2 -translate-x-1/2 top-2" />
@@ -201,12 +262,10 @@ export default function Roadmap() {
               </button>
             </div>
 
-            {/* Content */}
             <div className="px-6 pt-6 pb-8">
-              {/* Header */}
               <div className="flex items-start gap-5 mb-8">
-                <div className={`w-16 h-16 rounded-lg flex items-center justify-center shrink-0 shadow-[0_4px_0_0_#9d4f00] ${
-                  openStepStatus === 'completed' ? 'bg-secondary-container shadow-[0_4px_0_0_#00635d]' : 'bg-primary-container'
+                <div className={`w-16 h-16 rounded-lg flex items-center justify-center shrink-0 ${
+                  openStepStatus === 'completed' ? 'bg-secondary-container shadow-[0_4px_0_0_#00635d]' : 'bg-primary-container shadow-[0_4px_0_0_#9d4f00]'
                 }`}>
                   <span className={`material-symbols-outlined text-3xl ${
                     openStepStatus === 'completed' ? 'text-on-secondary-container' : 'text-on-primary-container'
@@ -221,14 +280,15 @@ export default function Roadmap() {
                   <h2 className="font-headline font-extrabold text-2xl text-on-surface tracking-tight mt-1">
                     {openStepData.title}
                   </h2>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="material-symbols-outlined text-sm text-on-surface-variant">schedule</span>
-                    <span className="text-sm font-medium text-on-surface-variant">{openStepData.time}</span>
-                  </div>
+                  {openStepData.time && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="material-symbols-outlined text-sm text-on-surface-variant">schedule</span>
+                      <span className="text-sm font-medium text-on-surface-variant">{openStepData.time}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Guide content */}
               <div className="space-y-6">
                 <div>
                   <h3 className="font-headline font-bold text-lg text-on-surface mb-3">How to do this</h3>
@@ -237,7 +297,6 @@ export default function Roadmap() {
                   </div>
                 </div>
 
-                {/* Status badge */}
                 <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold ${
                   openStepStatus === 'completed'
                     ? 'bg-secondary-container text-on-secondary-container'
@@ -250,7 +309,6 @@ export default function Roadmap() {
                 </div>
               </div>
 
-              {/* Action buttons */}
               <div className="mt-8 space-y-3">
                 {openStepStatus === 'current' && (
                   <button
@@ -299,7 +357,6 @@ interface StepNodeProps {
 
 function StepNode({ step, status, icon, offset, onCardClick, onUndo }: StepNodeProps) {
 
-  /* ── COMPLETED ── */
   if (status === 'completed') {
     return (
       <div className={`relative w-full flex justify-center mb-20 ${offset}`}>
@@ -324,7 +381,6 @@ function StepNode({ step, status, icon, offset, onCardClick, onUndo }: StepNodeP
     )
   }
 
-  /* ── CURRENT ── */
   if (status === 'current') {
     return (
       <div className={`relative w-full flex justify-center mb-24 ${offset}`}>
@@ -344,7 +400,6 @@ function StepNode({ step, status, icon, offset, onCardClick, onUndo }: StepNodeP
     )
   }
 
-  /* ── UPCOMING ── */
   if (status === 'upcoming') {
     return (
       <div className={`relative w-full flex justify-center mb-24 ${offset} opacity-60`}>
@@ -360,7 +415,6 @@ function StepNode({ step, status, icon, offset, onCardClick, onUndo }: StepNodeP
     )
   }
 
-  /* ── LOCKED ── */
   return (
     <div className={`relative w-full flex justify-center mb-12 ${offset} opacity-40`}>
       <div className="relative">

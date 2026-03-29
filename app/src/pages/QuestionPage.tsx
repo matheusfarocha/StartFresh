@@ -12,6 +12,7 @@ const MASCOT_MAP: Record<string, string> = {
 }
 
 const MASCOT_MESSAGES: Record<string, string> = {
+  userType: "Welcome! Let me know who you are so I can set things up right for you.",
   timeAway: "Whether it's been months or decades, I'll help you navigate what's changed.",
   borough: "Knowing your borough helps me find programs and offices close to you.",
   hasID: "Your ID status affects almost every next step — there are no wrong answers here.",
@@ -47,6 +48,13 @@ export default function QuestionPage() {
   function handleSingle(value: string) {
     const newAnswers = { ...answers, [questionId!]: value }
     setAnswer(questionId!, value)
+
+    // Federal employees go to custom roadmap builder
+    if (questionId === 'userType' && value === 'employee') {
+      navigate('/customroadmap')
+      return
+    }
+
     const next = getNextQuestion(questionId!, value)
     if (next === null) {
       const roadmap = buildRoadmapFromAnswers(newAnswers)

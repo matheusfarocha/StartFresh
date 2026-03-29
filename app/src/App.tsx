@@ -9,6 +9,7 @@ import Roadmap from './pages/Roadmap'
 import Resources from './pages/Resources'
 import Community from './pages/Community'
 import Profile from './pages/Profile'
+import CustomRoadmap from './pages/CustomRoadmap'
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
         <Route path="/question/:questionId" element={<QuestionPage />} />
         <Route path="/generating" element={<GeneratingRoadmap />} />
         <Route path="/roadmap" element={<Roadmap />} />
+        <Route path="/customroadmap" element={<CustomRoadmap />} />
         <Route path="/resources" element={<Resources />} />
         <Route path="/community" element={<Community />} />
         <Route path="/profile" element={<Profile />} />

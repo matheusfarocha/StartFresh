@@ -1,44 +1,56 @@
 import { useNavigate } from 'react-router-dom'
 import Icon from '../components/Icon'
-
-const features = [
-  {
-    icon: 'route',
-    title: 'My Roadmap',
-    description: 'A step-by-step plan tailored to your needs, borough, and goals.',
-    color: 'bg-primary-container',
-    textColor: 'text-on-primary-container',
-    shadow: 'shadow-[0_6px_0_0_#9d4f00]',
-    action: '/question/timeAway',
-    actionLabel: 'Start My Plan',
-    primary: true,
-  },
-  {
-    icon: 'menu_book',
-    title: 'Resource Directory',
-    description: 'Browse verified NYC organizations for housing, jobs, ID, health, and more.',
-    color: 'bg-secondary-container',
-    textColor: 'text-on-secondary-container',
-    shadow: 'shadow-[0_6px_0_0_#00635d]',
-    action: '/resources',
-    actionLabel: 'Browse Resources',
-    primary: false,
-  },
-  {
-    icon: 'groups',
-    title: 'Community',
-    description: 'Connect with others who are on the same path. You are not alone.',
-    color: 'bg-tertiary-container',
-    textColor: 'text-on-tertiary-container',
-    shadow: 'shadow-[0_6px_0_0_#005e88]',
-    action: '/community',
-    actionLabel: 'Join Community',
-    primary: false,
-  },
-]
+import { useApp } from '../context/AppContext'
 
 export default function Home() {
   const navigate = useNavigate()
+  const { roadmap, currentStep } = useApp()
+  const hasRoadmap = !!roadmap
+  const totalSteps = roadmap?.sections.reduce((sum, s) => sum + s.steps.length, 0) ?? 0
+  const allDone = hasRoadmap && currentStep >= totalSteps
+
+  const features = [
+    {
+      icon: 'route',
+      title: 'My Roadmap',
+      description: allDone
+        ? 'You completed every step. Amazing!'
+        : hasRoadmap
+          ? 'Continue your personalized journey.'
+          : 'A step-by-step plan tailored to your needs, borough, and goals.',
+      color: 'bg-primary-container',
+      textColor: 'text-on-primary-container',
+      shadow: 'shadow-[0_6px_0_0_#9d4f00]',
+      action: hasRoadmap ? '/roadmap' : '/question/userType',
+      actionLabel: allDone ? 'View Roadmap' : hasRoadmap ? 'View Roadmap' : 'Start My Plan',
+      badge: allDone ? 'Completed' : hasRoadmap ? 'In Progress' : 'Recommended',
+      primary: true,
+    },
+    {
+      icon: 'menu_book',
+      title: 'Resource Directory',
+      description: 'Browse verified NYC organizations for housing, jobs, ID, health, and more.',
+      color: 'bg-secondary-container',
+      textColor: 'text-on-secondary-container',
+      shadow: 'shadow-[0_6px_0_0_#00635d]',
+      action: '/resources',
+      actionLabel: 'Browse Resources',
+      badge: null,
+      primary: false,
+    },
+    {
+      icon: 'groups',
+      title: 'Community',
+      description: 'Connect with others who are on the same path. You are not alone.',
+      color: 'bg-tertiary-container',
+      textColor: 'text-on-tertiary-container',
+      shadow: 'shadow-[0_6px_0_0_#005e88]',
+      action: '/community',
+      actionLabel: 'Join Community',
+      badge: null,
+      primary: false,
+    },
+  ]
 
   return (
     <main className="flex-grow max-w-3xl mx-auto w-full px-6 pt-8 pb-24">
@@ -55,7 +67,6 @@ export default function Home() {
             </h1>
           </div>
         </div>
-
       </section>
 
       {/* Feature Grid */}
@@ -70,12 +81,12 @@ export default function Home() {
               }`}
             >
               <div className="flex items-start justify-between">
-                <div className={`w-14 h-14 rounded-lg bg-white/20 flex items-center justify-center`}>
+                <div className="w-14 h-14 rounded-lg bg-white/20 flex items-center justify-center">
                   <span className={`material-symbols-outlined ${feature.textColor} text-3xl`}>{feature.icon}</span>
                 </div>
-                {feature.primary && (
+                {feature.badge && (
                   <span className="px-3 py-1 bg-white/20 rounded-full text-[10px] font-black uppercase tracking-widest">
-                    Recommended
+                    {feature.badge}
                   </span>
                 )}
               </div>

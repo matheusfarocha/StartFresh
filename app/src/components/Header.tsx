@@ -47,7 +47,7 @@ export default function Header({ disabled }: HeaderProps) {
         ) : (
           <>
             {navLink('/home', 'Home')}
-            {navLink(roadmap ? '/roadmap' : '/question/borough', 'Roadmap')}
+            {navLink(roadmap ? '/roadmap' : '/question/userType', 'Roadmap')}
             {navLink('/resources', 'Resources')}
             {navLink('/community', 'Community')}
           </>
