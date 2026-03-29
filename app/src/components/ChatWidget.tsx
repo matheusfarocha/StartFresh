@@ -11,7 +11,7 @@ const SUGGESTIONS = [
   'Where do I start?',
   'I need a place to stay',
   'How do I get my ID?',
-  'What is SageStart?',
+  'What should I do next?',
 ]
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`
