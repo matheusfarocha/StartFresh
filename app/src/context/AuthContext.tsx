@@ -2,13 +2,6 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
-import { createClient } from '@supabase/supabase-js'
-
-// Service role client for profile reads (bypasses RLS)
-const supabaseAdmin = createClient(
-  import.meta.env.VITE_SUPABASE_URL as string,
-  import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY as string,
-)
 
 interface AuthContextType {
   isLoggedIn: boolean
@@ -36,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   const fetchDisplayName = async (userId: string) => {
-    const { data } = await supabaseAdmin
+    const { data } = await supabase
       .from('profiles')
       .select('display_name')
       .eq('id', userId)
@@ -68,8 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) return { error: error.message }
 
     if (data.user) {
-      // Use admin client to insert profile (bypasses RLS timing issue)
-      const { error: profileError } = await supabaseAdmin
+      const { error: profileError } = await supabase
         .from('profiles')
         .insert({ id: data.user.id, display_name: name })
       if (profileError) return { error: profileError.message }
