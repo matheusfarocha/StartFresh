@@ -29,9 +29,10 @@ const TYPE_CONFIG: Record<PostType, { label: string; color: string; bg: string }
 function timeAgo(date: string) {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000)
   if (seconds < 60) return 'just now'
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}h ago`
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
-  return `${Math.floor(seconds / 86400)}d ago`
+  if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`
+  return `${Math.floor(seconds / 604800)}w ago`
 }
 
 function ComposeModal({ onClose, onPost, displayName }: {
@@ -73,7 +74,6 @@ function ComposeModal({ onClose, onPost, displayName }: {
         </div>
 
         <div className="p-6">
-          {/* Type selector */}
           <div className="flex gap-2 mb-5">
             {(['discussion', 'question', 'alert'] as PostType[]).map(t => {
               const cfg = TYPE_CONFIG[t]
@@ -83,9 +83,7 @@ function ComposeModal({ onClose, onPost, displayName }: {
                   key={t}
                   onClick={() => setType(t)}
                   className={`px-4 py-1.5 rounded-full text-xs font-headline font-bold transition-all cursor-pointer border-2 ${
-                    active
-                      ? `${cfg.bg} ${cfg.color} border-transparent`
-                      : 'bg-transparent border-outline-variant text-on-surface-variant'
+                    active ? `${cfg.bg} ${cfg.color} border-transparent` : 'bg-transparent border-outline-variant text-on-surface-variant'
                   }`}
                 >
                   {cfg.label}
@@ -110,10 +108,7 @@ function ComposeModal({ onClose, onPost, displayName }: {
           />
 
           <div className="flex gap-3">
-            <button
-              onClick={onClose}
-              className="px-6 py-3 rounded-xl font-headline font-bold text-on-surface-variant bg-surface-container cursor-pointer hover:bg-surface-container-high transition-colors"
-            >
+            <button onClick={onClose} className="px-6 py-3 rounded-xl font-headline font-bold text-on-surface-variant bg-surface-container cursor-pointer">
               Cancel
             </button>
             <button
@@ -134,6 +129,7 @@ export default function Community() {
   const [posts, setPosts] = useState<Post[]>([])
   const [sort, setSort] = useState<SortType>('recent')
   const [filter, setFilter] = useState<FilterType>('all')
+  const [search, setSearch] = useState('')
   const [userVotes, setUserVotes] = useState<Set<string>>(new Set())
   const [showCompose, setShowCompose] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -158,6 +154,15 @@ export default function Community() {
 
   useEffect(() => { fetchPosts(); fetchUserVotes() }, [user])
 
+  const handleDeletePost = async (e: React.MouseEvent, postId: string) => {
+    e.stopPropagation()
+    if (!confirm('Delete this post? This cannot be undone.')) return
+    await supabase.from('post_votes').delete().eq('post_id', postId)
+    await supabase.from('replies').delete().eq('post_id', postId)
+    await supabase.from('posts').delete().eq('id', postId)
+    fetchPosts()
+  }
+
   const handleVote = async (e: React.MouseEvent, postId: string) => {
     e.stopPropagation()
     if (!user) return
@@ -180,6 +185,15 @@ export default function Community() {
 
   const visible = [...posts]
     .filter(p => filter === 'all' || p.type === filter)
+    .filter(p => {
+      if (!search.trim()) return true
+      const q = search.toLowerCase()
+      return (
+        p.content.toLowerCase().includes(q) ||
+        (p.title ?? '').toLowerCase().includes(q) ||
+        p.display_name.toLowerCase().includes(q)
+      )
+    })
     .sort((a, b) =>
       sort === 'trending'
         ? (b.replies[0]?.count ?? 0) - (a.replies[0]?.count ?? 0)
@@ -188,7 +202,6 @@ export default function Community() {
 
   return (
     <main className="flex-grow w-full">
-
       {/* Page header */}
       <div className="border-b border-outline-variant/30 bg-surface-container-low px-6 py-4 flex items-center justify-between sticky top-[72px] z-10">
         <div>
@@ -207,27 +220,37 @@ export default function Community() {
       </div>
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-5">
+        {/* Search bar */}
+        <div className="flex items-center gap-3 bg-surface-container rounded-xl px-4 py-3 mb-4 focus-within:ring-2 focus-within:ring-primary/30 transition-all">
+          <Icon name="search" className="text-on-surface-variant text-xl shrink-0" />
+          <input
+            type="text"
+            placeholder="Search posts..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="flex-grow bg-transparent outline-none text-on-surface text-sm placeholder:text-on-surface-variant font-body"
+          />
+          {search && (
+            <button onClick={() => setSearch('')} className="text-on-surface-variant hover:text-on-surface cursor-pointer">
+              <Icon name="close" className="text-lg" />
+            </button>
+          )}
+        </div>
 
         {/* Sort + Filter row */}
         <div className="flex flex-wrap items-center gap-2 mb-6">
-          {/* Sort pills */}
           {(['recent', 'trending'] as SortType[]).map(s => (
             <button
               key={s}
               onClick={() => setSort(s)}
               className={`px-4 py-1.5 rounded-full font-headline font-bold text-sm transition-all cursor-pointer ${
-                sort === s
-                  ? 'bg-primary text-on-primary shadow-[0_3px_0_0_#612f00]'
-                  : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+                sort === s ? 'bg-primary text-on-primary shadow-[0_3px_0_0_#612f00]' : 'bg-surface-container text-on-surface-variant'
               }`}
             >
               {s === 'recent' ? 'Recent' : 'Trending'}
             </button>
           ))}
-
           <div className="w-px h-5 bg-outline-variant mx-1" />
-
-          {/* Type filters */}
           {filters.map(f => {
             const active = filter === f.value
             const cfg = f.value !== 'all' ? TYPE_CONFIG[f.value as PostType] : null
@@ -238,7 +261,7 @@ export default function Community() {
                 className={`px-4 py-1.5 rounded-full text-sm font-headline font-bold transition-all cursor-pointer ${
                   active && cfg ? `${cfg.bg} ${cfg.color}` :
                   active ? 'bg-on-surface text-background' :
-                  'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+                  'bg-surface-container text-on-surface-variant'
                 }`}
               >
                 {f.label}
@@ -260,7 +283,6 @@ export default function Community() {
                   <div className="h-3 bg-surface-container-high rounded w-1/3" />
                   <div className="h-5 bg-surface-container-high rounded w-3/4" />
                   <div className="h-3 bg-surface-container-high rounded w-full" />
-                  <div className="h-3 bg-surface-container-high rounded w-2/3" />
                 </div>
               </div>
             ))}
@@ -272,12 +294,14 @@ export default function Community() {
             <p className="text-on-surface-variant text-sm mb-6">
               {filter === 'all' ? 'Be the first to post.' : `No ${filter}s yet.`}
             </p>
-            <button
-              onClick={() => setShowCompose(true)}
-              className="bg-primary text-on-primary font-headline font-bold px-6 py-3 rounded-full shadow-[0_4px_0_0_#612f00] active:translate-y-1 active:shadow-none transition-all cursor-pointer"
-            >
-              Start the conversation
-            </button>
+            {isLoggedIn && (
+              <button
+                onClick={() => setShowCompose(true)}
+                className="bg-primary text-on-primary font-headline font-bold px-6 py-3 rounded-full shadow-[0_4px_0_0_#612f00] active:translate-y-1 active:shadow-none transition-all cursor-pointer"
+              >
+                Start the conversation
+              </button>
+            )}
           </div>
         ) : (
           <div className="flex flex-col divide-y divide-outline-variant/20">
@@ -301,39 +325,33 @@ export default function Community() {
                   </div>
 
                   {/* Content */}
-                  <button
-                    className="flex-1 text-left cursor-pointer"
-                    onClick={() => navigate(`/community/${post.id}`)}
-                  >
-                    {/* Meta row */}
+                  <button className="flex-1 text-left cursor-pointer" onClick={() => navigate(`/community/${post.id}`)}>
                     <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                      <span className={`text-[11px] font-headline font-black uppercase tracking-wider ${cfg.color}`}>
-                        {cfg.label}
-                      </span>
+                      <span className={`text-[11px] font-headline font-black uppercase tracking-wider ${cfg.color}`}>{cfg.label}</span>
                       <span className="text-outline-variant text-xs">·</span>
                       <span className="text-xs text-on-surface-variant font-medium">{post.display_name}</span>
                       <span className="text-outline-variant text-xs">·</span>
                       <span className="text-xs text-on-surface-variant">{timeAgo(post.created_at)}</span>
                     </div>
-
-                    {/* Title */}
                     <h3 className="font-headline font-extrabold text-lg text-on-surface leading-snug mb-1.5 group-hover:text-primary transition-colors">
                       {post.title ?? post.content}
                     </h3>
-
-                    {/* Body preview */}
                     {post.title && (
-                      <p className="text-on-surface-variant text-sm leading-relaxed line-clamp-2 mb-3">
-                        {post.content}
-                      </p>
+                      <p className="text-on-surface-variant text-sm leading-relaxed line-clamp-2 mb-3">{post.content}</p>
                     )}
-
-                    {/* Reply count */}
-                    <div className="flex items-center gap-1.5 text-on-surface-variant">
-                      <Icon name="chat_bubble_outline" className="text-base" />
-                      <span className="text-xs font-headline font-bold">
-                        {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
-                      </span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-on-surface-variant">
+                        <Icon name="chat_bubble_outline" className="text-base" />
+                        <span className="text-xs font-headline font-bold">{replyCount} {replyCount === 1 ? 'reply' : 'replies'}</span>
+                      </div>
+                      {user?.id === post.user_id && (
+                        <button
+                          onClick={e => handleDeletePost(e, post.id)}
+                          className="text-on-surface-variant hover:text-error transition-colors cursor-pointer opacity-0 group-hover:opacity-100 p-1"
+                        >
+                          <Icon name="delete" className="text-base" />
+                        </button>
+                      )}
                     </div>
                   </button>
                 </div>
@@ -343,7 +361,6 @@ export default function Community() {
         )}
       </div>
 
-      {/* FAB fallback */}
       {isLoggedIn && (
         <button
           onClick={() => setShowCompose(true)}

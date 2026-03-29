@@ -1,34 +1,35 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import Icon from '../components/Icon'
 
 type PostType = 'question' | 'discussion' | 'alert'
 
 interface Post {
   id: string
-  user_id: string
-  display_name: string
+  user_id: string | null
+  display_name: string | null
   type: PostType
-  title: string | null
-  content: string
+  title: string
+  body: string
+  upvotes: number
   created_at: string
-  post_votes: { count: number }[]
 }
 
 interface Reply {
   id: string
-  user_id: string
-  display_name: string
-  content: string
+  post_id: string
+  user_id: string | null
+  display_name: string | null
+  body: string
+  upvotes: number
   created_at: string
 }
 
-const TYPE_CONFIG: Record<PostType, { label: string; bg: string; text: string }> = {
-  question:   { label: 'QUESTION',   bg: 'bg-primary-container',   text: 'text-on-primary-container' },
-  discussion: { label: 'DISCUSSION', bg: 'bg-secondary-container', text: 'text-on-secondary-container' },
-  alert:      { label: 'ALERT',      bg: 'bg-error-container',     text: 'text-on-error-container' },
+const TYPE_CONFIG: Record<PostType, { label: string; color: string; bg: string }> = {
+  question:   { label: 'QUESTION',   color: 'text-[#9d4f00]',   bg: 'bg-[#9d4f00]/10' },
+  discussion: { label: 'DISCUSSION', color: 'text-[#007164]', bg: 'bg-[#007164]/10' },
+  alert:      { label: 'ALERT',      color: 'text-red-600',     bg: 'bg-red-100' },
 }
 
 function timeAgo(date: string) {
@@ -36,18 +37,20 @@ function timeAgo(date: string) {
   if (seconds < 60) return 'just now'
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
-  return `${Math.floor(seconds / 86400)}d ago`
+  if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`
+  return `${Math.floor(seconds / 604800)}w ago`
 }
 
-function Avatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' | 'lg' }) {
-  const initial = name?.[0]?.toUpperCase() ?? '?'
-  const sz =
-    size === 'sm' ? 'w-8 h-8 text-xs' :
-    size === 'lg' ? 'w-12 h-12 text-base' :
-    'w-10 h-10 text-sm'
+function Avatar({ name, size = 36 }: { name: string | null; size?: number }) {
+  const initials = (name ?? 'G').slice(0, 2).toUpperCase()
+  const colors = ['#9d4f00', '#007164', '#1a56db', '#7e3af2', '#057a55']
+  const color = colors[(name?.charCodeAt(0) ?? 0) % colors.length]
   return (
-    <div className={`${sz} rounded-full bg-primary-container flex items-center justify-center shrink-0`}>
-      <span className="font-headline font-bold text-on-primary-container">{initial}</span>
+    <div
+      style={{ width: size, height: size, backgroundColor: color, fontSize: size * 0.4 }}
+      className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0"
+    >
+      {initials}
     </div>
   )
 }
@@ -55,228 +58,259 @@ function Avatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' | 'lg'
 export default function CommunityThread() {
   const { postId } = useParams<{ postId: string }>()
   const navigate = useNavigate()
-  const { displayName, user, isLoggedIn } = useAuth()
-  const effectiveDisplayName = displayName ?? 'Anonymous'
+  const { user, displayName } = useAuth()
+
   const [post, setPost] = useState<Post | null>(null)
   const [replies, setReplies] = useState<Reply[]>([])
-  const [voted, setVoted] = useState(false)
-  const [replyText, setReplyText] = useState('')
+  const [replyBody, setReplyBody] = useState('')
   const [submitting, setSubmitting] = useState(false)
-
-  const fetchPost = async () => {
-    const { data } = await supabase
-      .from('posts')
-      .select('*, post_votes(count)')
-      .eq('id', postId)
-      .single()
-    if (data) setPost(data as Post)
-  }
-
-  const fetchReplies = async () => {
-    const { data } = await supabase
-      .from('replies')
-      .select('*')
-      .eq('post_id', postId)
-      .order('created_at', { ascending: true })
-    if (data) setReplies(data as Reply[])
-  }
-
-  const fetchVoteStatus = async () => {
-    if (!postId || !user) return
-    const { data } = await supabase
-      .from('post_votes')
-      .select('post_id')
-      .eq('post_id', postId)
-      .eq('user_id', user.id)
-      .maybeSingle()
-    setVoted(!!data)
-  }
+  const [upvoted, setUpvoted] = useState(false)
+  const [upvotedReplies, setUpvotedReplies] = useState<Set<string>>(new Set())
+  const [loading, setLoading] = useState(true)
+  const repliesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!postId) return
-    fetchPost()
-    fetchReplies()
-    fetchVoteStatus()
 
-    // Real-time: new replies stream in live
+    const load = async () => {
+      const [{ data: postData }, { data: repliesData }] = await Promise.all([
+        supabase.from('posts').select('*').eq('id', postId).single(),
+        supabase.from('replies').select('*').eq('post_id', postId).order('created_at', { ascending: true }),
+      ])
+      if (postData) setPost(postData)
+      if (repliesData) setReplies(repliesData)
+      setLoading(false)
+    }
+    load()
+
     const channel = supabase
       .channel(`replies:${postId}`)
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'replies', filter: `post_id=eq.${postId}` },
-        payload => {
-          setReplies(prev => {
-            const exists = prev.some(r => r.id === payload.new.id)
-            return exists ? prev : [...prev, payload.new as Reply]
-          })
+        { event: '*', schema: 'public', table: 'replies', filter: `post_id=eq.${postId}` },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setReplies((prev) => [...prev, payload.new as Reply])
+          } else if (payload.eventType === 'DELETE') {
+            setReplies((prev) => prev.filter((r) => r.id !== payload.old.id))
+          } else if (payload.eventType === 'UPDATE') {
+            setReplies((prev) => prev.map((r) => (r.id === payload.new.id ? (payload.new as Reply) : r)))
+          }
         }
       )
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [postId, user])
+  }, [postId])
 
-  const handleVote = async () => {
-    if (!user) return // votes require real auth
-    if (voted) {
-      await supabase.from('post_votes').delete().eq('post_id', postId).eq('user_id', user.id)
-      setVoted(false)
-    } else {
-      await supabase.from('post_votes').insert({ post_id: postId, user_id: user.id })
-      setVoted(true)
-    }
-    fetchPost()
+  const handleUpvotePost = async () => {
+    if (!post || !user) return
+    const delta = upvoted ? -1 : 1
+    setUpvoted(!upvoted)
+    setPost((p) => p ? { ...p, upvotes: p.upvotes + delta } : p)
+    await supabase.from('posts').update({ upvotes: post.upvotes + delta }).eq('id', post.id)
   }
 
-  const handleReply = async () => {
-    if (!replyText.trim() || !postId) return
+  const handleUpvoteReply = async (reply: Reply) => {
+    if (!user) return
+    const wasUpvoted = upvotedReplies.has(reply.id)
+    const delta = wasUpvoted ? -1 : 1
+    setUpvotedReplies((prev) => {
+      const next = new Set(prev)
+      wasUpvoted ? next.delete(reply.id) : next.add(reply.id)
+      return next
+    })
+    setReplies((prev) => prev.map((r) => r.id === reply.id ? { ...r, upvotes: r.upvotes + delta } : r))
+    await supabase.from('replies').update({ upvotes: reply.upvotes + delta }).eq('id', reply.id)
+  }
+
+  const handleDeletePost = async () => {
+    if (!post || !user || user.id !== post.user_id) return
+    if (!confirm('Delete this post and all its replies?')) return
+    await supabase.from('replies').delete().eq('post_id', post.id)
+    await supabase.from('posts').delete().eq('id', post.id)
+    navigate('/community')
+  }
+
+  const handleDeleteReply = async (reply: Reply) => {
+    if (!user || user.id !== reply.user_id) return
+    await supabase.from('replies').delete().eq('id', reply.id)
+  }
+
+  const handleSubmitReply = async () => {
+    if (!replyBody.trim() || !postId) return
     setSubmitting(true)
+    const name = user ? (displayName ?? user.email ?? 'Member') : 'Guest'
     await supabase.from('replies').insert({
       post_id: postId,
       user_id: user?.id ?? null,
-      display_name: effectiveDisplayName,
-      content: replyText.trim(),
+      display_name: name,
+      body: replyBody.trim(),
+      upvotes: 0,
     })
-    setReplyText('')
+    setReplyBody('')
     setSubmitting(false)
-    // No manual fetchReplies needed — realtime handles it
+    setTimeout(() => repliesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleReply()
-    }
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#fdf8f0] flex items-center justify-center">
+        <div className="text-[#9d4f00] font-semibold">Loading thread...</div>
+      </div>
+    )
   }
 
   if (!post) {
     return (
-      <main className="flex-grow flex items-center justify-center">
-        <div className="w-10 h-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-      </main>
+      <div className="min-h-screen bg-[#fdf8f0] flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-2xl mb-2">Post not found</div>
+          <button onClick={() => navigate('/community')} className="text-[#9d4f00] underline">Back to community</button>
+        </div>
+      </div>
     )
   }
 
   const cfg = TYPE_CONFIG[post.type]
-  const voteCount = post.post_votes[0]?.count ?? 0
 
   return (
-    <main className="flex-grow max-w-lg mx-auto w-full flex flex-col">
-      {/* Thread header */}
-      <div className="flex items-center justify-between px-4 pt-5 pb-3 sticky top-[72px] bg-background z-10">
+    <div className="min-h-screen bg-[#fdf8f0]">
+      <div className="max-w-2xl mx-auto px-4 py-6 pb-32">
+        {/* Back button */}
         <button
           onClick={() => navigate('/community')}
-          className="flex items-center gap-1 text-primary font-headline font-bold cursor-pointer"
+          className="flex items-center gap-1 text-[#9d4f00] font-semibold mb-6 hover:opacity-80 transition-opacity"
         >
-          <Icon name="arrow_back" className="text-xl" />
-          <span>Back</span>
+          <span className="material-symbols-outlined text-xl">arrow_back</span>
+          Community Feed
         </button>
-        <h2 className="font-headline font-extrabold text-xl text-on-surface">Thread</h2>
-        <div className="w-16" />
-      </div>
 
-      {/* Scrollable content */}
-      <div className="flex-grow px-4 pb-36 overflow-y-auto">
-        {/* Original post */}
-        <div className="bg-surface-container-lowest rounded-[1.5rem] p-5 shadow-[0_4px_0_0_#bcb9b3] mb-6">
-          <span className={`${cfg.bg} ${cfg.text} text-[10px] font-headline font-black uppercase tracking-widest px-3 py-1 rounded-full inline-block mb-4`}>
-            {cfg.label}
-          </span>
-          <div className="flex items-center gap-3 mb-4">
-            <Avatar name={post.display_name} size="lg" />
-            <div>
-              <p className="font-headline font-bold text-on-surface">{post.display_name}</p>
-              <p className="text-xs text-on-surface-variant">{timeAgo(post.created_at)}</p>
+        {/* Post card */}
+        <div className="bg-white rounded-2xl shadow-[4px_4px_0px_#9d4f00] border-0 p-6 mb-6">
+          {/* Header */}
+          <div className="flex items-start gap-3 mb-4">
+            <Avatar name={post.display_name} size={44} />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-gray-900">{post.display_name ?? 'Guest'}</span>
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${cfg.color} ${cfg.bg}`}>
+                  {cfg.label}
+                </span>
+              </div>
+              <div className="text-xs text-gray-400 mt-0.5">{timeAgo(post.created_at)}</div>
             </div>
+            {user && user.id === post.user_id && (
+              <button
+                onClick={handleDeletePost}
+                className="text-red-400 hover:text-red-600 transition-colors p-1"
+                title="Delete post"
+              >
+                <span className="material-symbols-outlined text-xl">delete</span>
+              </button>
+            )}
           </div>
-          {post.title && (
-            <h1 className="font-headline font-extrabold text-xl text-on-surface mb-3 leading-snug">
-              {post.title}
-            </h1>
-          )}
-          <p className="text-on-surface leading-relaxed">{post.content}</p>
 
-          {/* Post stats */}
-          <div className="flex items-center gap-5 mt-4 pt-4 border-t border-outline-variant/30">
+          <h1 className="text-xl font-bold text-gray-900 mb-3">{post.title}</h1>
+          {post.body && <p className="text-gray-700 leading-relaxed mb-4">{post.body}</p>}
+
+          {/* Upvote row */}
+          <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
             <button
-              onClick={handleVote}
-              className={`flex items-center gap-1.5 transition-all cursor-pointer ${voted ? 'text-error' : 'text-on-surface-variant'}`}
+              onClick={handleUpvotePost}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold text-sm transition-all ${
+                upvoted
+                  ? 'bg-[#9d4f00] text-white shadow-[2px_2px_0px_#7a3c00]'
+                  : 'bg-[#9d4f00]/10 text-[#9d4f00] hover:bg-[#9d4f00]/20'
+              }`}
             >
-              <Icon name="favorite" filled={voted} className="text-lg" />
-              <span className="font-headline font-bold text-sm">{voteCount}</span>
+              <span className="material-symbols-outlined text-base">thumb_up</span>
+              {post.upvotes}
             </button>
-            <div className="flex items-center gap-1.5 text-secondary">
-              <Icon name="chat_bubble" className="text-lg" />
-              <span className="font-headline font-bold text-sm">
-                {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
-              </span>
-            </div>
-            {/* Live indicator */}
-            <div className="ml-auto flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-secondary animate-pulse block" />
-              <span className="text-xs text-on-surface-variant font-body">Live</span>
-            </div>
+            <span className="text-sm text-gray-400 flex items-center gap-1">
+              <span className="material-symbols-outlined text-base">chat_bubble_outline</span>
+              {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
+            </span>
           </div>
         </div>
 
         {/* Replies */}
-        {replies.length === 0 ? (
-          <p className="text-center text-on-surface-variant py-8 text-sm">
-            No replies yet — be the first to respond.
-          </p>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {replies.map((reply, i) => (
-              <div
-                key={reply.id}
-                className="bg-surface-container rounded-[1.25rem] p-4 shadow-[0_3px_0_0_#bcb9b3]"
-                style={{ animationDelay: `${i * 30}ms` }}
-              >
-                <div className="flex items-center gap-2.5 mb-2">
-                  <Avatar name={reply.display_name} size="sm" />
-                  <div>
-                    <p className="font-headline font-bold text-sm text-on-surface">{reply.display_name}</p>
-                    <p className="text-xs text-on-surface-variant">{timeAgo(reply.created_at)}</p>
+        <div className="space-y-4">
+          {replies.length === 0 && (
+            <div className="text-center py-8 text-gray-400">
+              <span className="material-symbols-outlined text-4xl block mb-2">forum</span>
+              No replies yet — be the first to respond!
+            </div>
+          )}
+          {replies.map((reply) => (
+            <div key={reply.id} className="bg-white rounded-xl shadow-[3px_3px_0px_#007164]/40 p-4">
+              <div className="flex items-start gap-3">
+                <Avatar name={reply.display_name} size={36} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-semibold text-sm text-gray-900">{reply.display_name ?? 'Guest'}</span>
+                    <span className="text-xs text-gray-400">{timeAgo(reply.created_at)}</span>
+                  </div>
+                  <p className="text-gray-700 text-sm leading-relaxed">{reply.body}</p>
+                  <div className="flex items-center gap-3 mt-2">
+                    <button
+                      onClick={() => handleUpvoteReply(reply)}
+                      className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full transition-all ${
+                        upvotedReplies.has(reply.id)
+                          ? 'bg-[#007164] text-white'
+                          : 'text-[#007164] hover:bg-[#007164]/10'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-sm">thumb_up</span>
+                      {reply.upvotes}
+                    </button>
+                    {user && user.id === reply.user_id && (
+                      <button
+                        onClick={() => handleDeleteReply(reply)}
+                        className="text-xs text-red-400 hover:text-red-600 flex items-center gap-1 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-sm">delete</span>
+                        Delete
+                      </button>
+                    )}
                   </div>
                 </div>
-                <p className="text-on-surface text-sm leading-relaxed">{reply.content}</p>
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          ))}
+          <div ref={repliesEndRef} />
+        </div>
       </div>
 
       {/* Sticky reply bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-surface-container-low border-t border-outline-variant/30 px-4 py-3 z-40">
-        <div className="max-w-lg mx-auto">
-          {isLoggedIn ? (
-            <div className="flex items-end gap-3">
-              <textarea
-                value={replyText}
-                onChange={e => setReplyText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Write a supportive reply..."
-                rows={1}
-                className="flex-grow bg-surface-container rounded-xl px-4 py-3 text-on-surface text-sm font-body outline-none resize-none placeholder:text-on-surface-variant focus:ring-2 focus:ring-primary/30"
-              />
-              <button
-                onClick={handleReply}
-                disabled={!replyText.trim() || submitting}
-                className="w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-[0_3px_0_0_#612f00] active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-50 shrink-0 cursor-pointer disabled:cursor-not-allowed"
-              >
-                <Icon name="send" className="text-on-primary text-base" />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => navigate('/login')}
-              className="w-full bg-primary text-on-primary font-headline font-bold py-3.5 rounded-xl shadow-[0_4px_0_0_#612f00] active:translate-y-1 active:shadow-none transition-all cursor-pointer"
-            >
-              Sign in to reply
-            </button>
-          )}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg px-4 py-3 z-50">
+        <div className="max-w-2xl mx-auto flex items-end gap-2">
+          <Avatar name={user ? (displayName ?? user.email) : 'Guest'} size={36} />
+          <div className="flex-1 bg-gray-50 rounded-2xl border border-gray-200 px-4 py-2">
+            <textarea
+              value={replyBody}
+              onChange={(e) => setReplyBody(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  handleSubmitReply()
+                }
+              }}
+              placeholder="Write a reply..."
+              rows={1}
+              className="w-full bg-transparent text-sm text-gray-800 placeholder-gray-400 resize-none focus:outline-none"
+              style={{ maxHeight: 120, overflowY: 'auto' }}
+            />
+          </div>
+          <button
+            onClick={handleSubmitReply}
+            disabled={!replyBody.trim() || submitting}
+            className="bg-[#9d4f00] text-white rounded-full w-10 h-10 flex items-center justify-center shadow-[2px_2px_0px_#7a3c00] hover:opacity-90 transition-opacity disabled:opacity-40"
+          >
+            <span className="material-symbols-outlined text-lg">send</span>
+          </button>
         </div>
       </div>
-    </main>
+    </div>
   )
 }
