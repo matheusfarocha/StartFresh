@@ -27,7 +27,7 @@ export default function ChatWidget() {
   const [showNudge, setShowNudge] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const nudgeTimer = useRef<ReturnType<typeof setTimeout>>()
+  const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Build user context string from their answers + roadmap
   const userContext = useMemo(() => {
@@ -84,7 +84,11 @@ export default function ChatWidget() {
     if (!open && messages.length === 0) {
       nudgeTimer.current = setTimeout(() => setShowNudge(true), 15000)
     }
-    return () => clearTimeout(nudgeTimer.current)
+    return () => {
+      if (nudgeTimer.current != null) {
+        clearTimeout(nudgeTimer.current)
+      }
+    }
   }, [open, messages.length])
 
   const sendMessage = async (text: string) => {

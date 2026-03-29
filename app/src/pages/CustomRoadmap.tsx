@@ -98,6 +98,7 @@ export default function CustomRoadmap() {
       family_restroom: 'Family', groups: 'Community', gavel: 'Legal',
       local_hospital: 'Health', account_balance: 'Finance', directions_bus: 'Transport',
     }
+    void iconToCategory
 
     const roadmap: GeneratedRoadmap = {
       sections: [{
