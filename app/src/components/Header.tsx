@@ -30,7 +30,7 @@ export default function Header({ disabled }: HeaderProps) {
     )
   }
 
-  const isLanding = pathname === '/'
+  const isLanding = pathname === '/' || pathname === '/login'
 
   return (
     <header className="sticky top-0 z-50 flex justify-between items-center w-full max-w-screen-xl mx-auto bg-surface-container-low rounded-b-xl px-6 py-4 shadow-[0_24px_48px_-12px_rgba(55,56,49,0.06)]">
