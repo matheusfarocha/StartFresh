@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom'
 import Icon from '../components/Icon'
 import { useAuth } from '../context/AuthContext'
+import { useApp } from '../context/AppContext'
 
 export default function Profile() {
   const navigate = useNavigate()
   const { user, displayName, isLoggedIn, signOut } = useAuth()
+  const { resetRoadmap } = useApp()
 
   if (!isLoggedIn) {
     return (
@@ -73,14 +75,21 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Sign Out */}
-      <div className="mt-12">
+      {/* Actions */}
+      <div className="mt-12 space-y-3">
         <button
           onClick={handleSignOut}
           className="w-full py-4 bg-surface-container-high text-error font-headline font-bold text-lg rounded-lg shadow-[0_4px_0_0_#bcb9b3] active:translate-y-1 active:shadow-[0_1px_0_0_#bcb9b3] transition-all cursor-pointer flex items-center justify-center gap-2"
         >
           <Icon name="logout" className="text-error" />
           Sign Out
+        </button>
+        <button
+          onClick={async () => { await resetRoadmap(); navigate('/home') }}
+          className="w-full py-4 bg-surface-container-high text-on-surface font-headline font-bold text-lg rounded-lg shadow-[0_4px_0_0_#bcb9b3] active:translate-y-1 active:shadow-[0_1px_0_0_#bcb9b3] transition-all cursor-pointer flex items-center justify-center gap-2"
+        >
+          <Icon name="restart_alt" className="text-on-surface-variant" />
+          Restart Roadmap
         </button>
       </div>
     </main>

@@ -92,8 +92,19 @@ export const QUESTION_BANK = {
       { value: 'yes', label: 'Yes, I have it' },
       { value: 'no',  label: 'No, I don\'t have it' },
     ],
-    // Either way → proceed to housing; answer is stored and used
-    // by roadmapEngine to order ID recovery steps correctly
+    next: () => 'hasSSN',
+  },
+
+  // ── STEP 3b: Social Security card (only if no/expired ID) ──────
+  hasSSN: {
+    id: 'hasSSN',
+    question: 'Do you have your Social Security card?',
+    sub: "You'll need this for jobs, benefits, and housing applications.",
+    type: 'single',
+    options: [
+      { value: 'yes', label: 'Yes, I have it' },
+      { value: 'no',  label: 'No, I don\'t have it' },
+    ],
     next: () => 'housingStatus',
   },
 
@@ -116,7 +127,7 @@ export const QUESTION_BANK = {
       { value: 'shelter',  label: 'Already in a shelter' },
       { value: 'stable',   label: 'I have stable housing' },
     ],
-    next: (answer) => answer === 'nowhere' ? 'hasChildren' : 'paroleProbation',
+    next: (answer) => answer === 'nowhere' ? 'hasChildren' : 'foodSituation',
   },
 
   // ── STEP 4a: Children (only if nowhere to stay) ───────────────
@@ -135,7 +146,7 @@ export const QUESTION_BANK = {
       { value: 'yes', label: 'Yes, I have children with me' },
       { value: 'no',  label: 'No, just me (or adults only)' },
     ],
-    next: () => 'paroleProbation',
+    next: () => 'foodSituation',
   },
 
   // ── STEP 5: Parole / Probation ────────────────────────────────
@@ -146,6 +157,20 @@ export const QUESTION_BANK = {
   //         more urgent when on supervision)
   // Data basis: Section 6 — Legal Aid, Clean Slate Act (Nov 2024),
   //             SNAP eligibility note re: drug trafficking convictions
+  // ── STEP 5a: Food situation ─────────────────────────────────────
+  foodSituation: {
+    id: 'foodSituation',
+    question: 'How are you doing for food right now?',
+    sub: "This helps us connect you to the right food resources.",
+    type: 'single',
+    options: [
+      { value: 'none',      label: 'I don\'t have food or money for food' },
+      { value: 'sometimes', label: 'I can get food but it\'s not consistent' },
+      { value: 'ok',        label: 'I\'m okay for now' },
+    ],
+    next: () => 'paroleProbation',
+  },
+
   paroleProbation: {
     id: 'paroleProbation',
     question: 'Are you currently on parole or probation?',

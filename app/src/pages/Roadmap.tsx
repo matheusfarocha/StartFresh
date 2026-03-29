@@ -32,6 +32,7 @@ const stepOffsets = [
 interface FlatStep {
   id: string
   title: string
+  what: string
   category: string
   sectionKey: string
   detail: string
@@ -45,6 +46,7 @@ function flattenSections(sections: RoadmapSection[]): FlatStep[] {
       flat.push({
         id: step.id,
         title: step.text,
+        what: step.what ?? '',
         category: section.label,
         sectionKey: section.key,
         detail: step.detail,
@@ -290,6 +292,14 @@ export default function Roadmap() {
               </div>
 
               <div className="space-y-6">
+                {openStepData.what && (
+                  <div>
+                    <h3 className="font-headline font-bold text-lg text-on-surface mb-3">What is this</h3>
+                    <div className="bg-primary-container/10 p-5 rounded-lg">
+                      <p className="text-on-surface leading-relaxed">{openStepData.what}</p>
+                    </div>
+                  </div>
+                )}
                 <div>
                   <h3 className="font-headline font-bold text-lg text-on-surface mb-3">How to do this</h3>
                   <div className="bg-surface-container-low p-5 rounded-lg">

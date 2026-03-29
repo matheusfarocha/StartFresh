@@ -30,6 +30,7 @@ interface AppContextType {
   // Session
   responses: Responses
   hasSession: boolean
+  resetRoadmap: () => Promise<void>
 }
 
 const AppContext = createContext<AppContextType | null>(null)
@@ -146,6 +147,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const resetRoadmap = async () => {
+    if (!user) return
+    setBoroughLocal(null)
+    setTimeAwayLocal(null)
+    setNeedsLocal([])
+    setAnswers({})
+    setRoadmapLocal(null)
+    setCurrentStepLocal(0)
+    setResponses({})
+    if (hasSession) {
+      await supabase
+        .from('user_sessions')
+        .delete()
+        .eq('user_id', user.id)
+      setHasSession(false)
+    }
+  }
+
   return (
     <AppContext.Provider
       value={{
@@ -157,6 +176,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         currentStep, setCurrentStep,
         responses,
         hasSession,
+        resetRoadmap,
       }}
     >
       {children}

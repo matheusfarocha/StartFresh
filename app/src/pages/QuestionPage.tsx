@@ -17,8 +17,10 @@ const MASCOT_MESSAGES: Record<string, string> = {
   borough: "Knowing your borough helps me find programs and offices close to you.",
   hasID: "Your ID status affects almost every next step — there are no wrong answers here.",
   hasBirthCert: "A birth certificate is the first link in the ID chain — we'll sort it together.",
+  hasSSN: "Your Social Security card is needed for jobs, benefits, and housing — we'll help you get one if needed.",
   housingStatus: "Be honest — this helps me find the right kind of help for tonight.",
   hasChildren: "This determines which shelter intake path is right for your family.",
+  foodSituation: "No shame in this — there are tons of free food resources in NYC. Let's find them.",
   paroleProbation: "This helps me show which housing and benefit options are open to you.",
   needs: "Select everything that applies. Your roadmap will cover all of it.",
 }
