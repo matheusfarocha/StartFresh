@@ -43,14 +43,30 @@ function boroughParam(borough: string | null): string {
 }
 
 // ── Fetch helpers ─────────────────────────────────────────────────
-async function fetchHHS(params: Record<string, string>, limit = 8): Promise<NormalizedResource[]> {
-  const qs = new URLSearchParams({ ...params, $limit: String(limit) })
+// Socrata ignores plain query params for column filtering — must use $where SoQL
+async function fetchHHS(category: string, borough: string, limit = 8): Promise<NormalizedResource[]> {
+  const where = `borough='${borough}' AND category='${category}'`
+  const qs = new URLSearchParams({ $where: where, $limit: String(limit) })
   try {
     const res = await fetch(`${HHS_BASE}?${qs}`)
     if (!res.ok) return []
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data: any[] = await res.json()
-    return data.map(item => normalizeResult(item, params.category ?? 'General'))
+    return data.map(item => normalizeResult(item, category))
+  } catch {
+    return []
+  }
+}
+
+async function fetchMH(borough: string, limit = 8): Promise<NormalizedResource[]> {
+  const where = `borough='${borough}'`
+  const qs = new URLSearchParams({ $where: where, $limit: String(limit) })
+  try {
+    const res = await fetch(`${MH_BASE}?${qs}`)
+    if (!res.ok) return []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data: any[] = await res.json()
+    return data.map(item => normalizeResult(item, 'Mental Health'))
   } catch {
     return []
   }
@@ -62,10 +78,7 @@ export async function fetchHousingResources(
   borough: string | null,
   housingStatus?: string
 ): Promise<NormalizedResource[]> {
-  const results = await fetchHHS({
-    category: 'Housing',
-    borough:  boroughParam(borough),
-  })
+  const results = await fetchHHS('Housing', boroughParam(borough))
 
   // If homeless tonight → sort emergency/shelter entries first
   if (housingStatus === 'nowhere') {
@@ -86,10 +99,7 @@ export async function fetchBenefitsResources(
   borough: string | null,
   hasBirthCert?: string
 ): Promise<NormalizedResource[]> {
-  const results = await fetchHHS({
-    category: 'Benefits',
-    borough:  boroughParam(borough),
-  })
+  const results = await fetchHHS('Benefits', boroughParam(borough))
 
   // No birth cert → surface Vital Records / ID entries first
   if (hasBirthCert === 'no') {
@@ -107,10 +117,7 @@ export async function fetchEmploymentResources(
   borough: string | null,
   paroleProbation?: string
 ): Promise<NormalizedResource[]> {
-  const results = await fetchHHS({
-    category: 'Employment',
-    borough:  boroughParam(borough),
-  })
+  const results = await fetchHHS('Employment', boroughParam(borough))
 
   // On supervision → surface Fair Chance / reentry-specific employers first
   if (paroleProbation === 'parole' || paroleProbation === 'probation') {
@@ -128,41 +135,26 @@ export async function fetchMentalHealthResources(
   borough: string | null,
   timeAway?: string
 ): Promise<NormalizedResource[]> {
-  const qs = new URLSearchParams({
-    borough: boroughParam(borough),
-    $limit:  '8',
-  })
-  try {
-    const res = await fetch(`${MH_BASE}?${qs}`)
-    if (!res.ok) return []
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data: any[] = await res.json()
-    const results = data.map(item => normalizeResult(item, 'Mental Health'))
+  const results = await fetchMH(boroughParam(borough))
 
-    // Long sentences → surface trauma-specialized orgs first
-    const longSentence = timeAway === '15+ years' || timeAway === '5-15 years'
-    if (longSentence) {
-      results.sort((a, b) => {
-        const aT = /trauma|reentry|justice|incarcerat/i.test(a.title + a.description)
-        const bT = /trauma|reentry|justice|incarcerat/i.test(b.title + b.description)
-        return (bT ? 1 : 0) - (aT ? 1 : 0)
-      })
-    }
-
-    return results
-  } catch {
-    return []
+  // Long sentences → surface trauma-specialized orgs first
+  const longSentence = timeAway === '15+ years' || timeAway === '5-15 years'
+  if (longSentence) {
+    results.sort((a, b) => {
+      const aT = /trauma|reentry|justice|incarcerat/i.test(a.title + a.description)
+      const bT = /trauma|reentry|justice|incarcerat/i.test(b.title + b.description)
+      return (bT ? 1 : 0) - (aT ? 1 : 0)
+    })
   }
+
+  return results
 }
 
 export async function fetchLegalAidResources(
   borough: string | null,
   paroleProbation?: string
 ): Promise<NormalizedResource[]> {
-  const results = await fetchHHS({
-    category: 'Legal',
-    borough:  boroughParam(borough),
-  })
+  const results = await fetchHHS('Legal', boroughParam(borough))
 
   // On parole → surface parole-specific legal help first
   if (paroleProbation === 'parole') {
@@ -179,5 +171,5 @@ export async function fetchLegalAidResources(
 export async function fetchFoodResources(
   borough: string | null
 ): Promise<NormalizedResource[]> {
-  return fetchHHS({ category: 'Food', borough: boroughParam(borough) })
+  return fetchHHS('Food', boroughParam(borough))
 }
