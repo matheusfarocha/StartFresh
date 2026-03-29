@@ -182,6 +182,20 @@ export const QUESTION_BANK = {
       { value: 'no',         label: 'No, I\'m off supervision' },
       { value: 'unsure',     label: 'I\'m not sure' },
     ],
+    next: () => 'hasPhone',
+  },
+
+  // ── STEP 5b: Phone access ──────────────────────────────────────
+  hasPhone: {
+    id: 'hasPhone',
+    question: 'Do you have access to a smartphone?',
+    sub: "A phone is essential for job applications, benefits, appointments, and staying connected.",
+    type: 'single',
+    options: [
+      { value: 'yes',     label: 'Yes, I have a working smartphone' },
+      { value: 'basic',   label: 'I have a basic phone (calls/texts only)' },
+      { value: 'no',      label: 'No, I don\'t have a phone' },
+    ],
     next: () => 'needs',
   },
 

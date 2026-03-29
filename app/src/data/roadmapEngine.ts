@@ -40,6 +40,7 @@ interface RoadmapInputs {
   hasChildren?: string
   foodSituation?: string   // 'none' | 'sometimes' | 'ok'
   paroleProbation?: string
+  hasPhone?: string        // 'yes' | 'basic' | 'no'
 }
 
 const SECTIONS: Record<string, { label: string; icon: string; color: string }> = {
@@ -53,6 +54,7 @@ const SECTIONS: Record<string, { label: string; icon: string; color: string }> =
   family:       { label: 'Family Reconnection',   icon: 'family_restroom',  color: '#9e9e94' },
   education:    { label: 'Education',             icon: 'school',           color: '#52b788' },
   community:    { label: 'Community',             icon: 'groups',           color: '#2d6a4f' },
+  phone:        { label: 'Phone & Connectivity', icon: 'smartphone',       color: '#52b788' },
 }
 
 // ── Step generators ──────────────────────────────────────────────
@@ -239,17 +241,32 @@ function getCommunitySteps(_inputs: RoadmapInputs): RoadmapStep[] {
   ]
 }
 
+function getPhoneSteps(inputs: RoadmapInputs): RoadmapStep[] {
+  const { hasPhone } = inputs
+  const steps: RoadmapStep[] = []
+
+  if (hasPhone === 'no') {
+    steps.push({ id: 'ph-1', text: 'Get a free smartphone through Lifeline', what: 'A federal program that gives qualifying low-income people a free phone with data. You almost certainly qualify.', detail: 'Apply at lifelinesupport.org or call 800-234-9473. You can also visit an Assurance Wireless or SafeLink store — multiple locations in every borough. Bring your ID (or release papers if no ID yet).', time: 'Same day – 1 week' })
+    steps.push({ id: 'ph-2', text: 'Use free internet at your local library', what: 'NYC public libraries offer free Wi-Fi, computers, and even device lending. No ID needed to use them.', detail: 'Find your nearest branch at nypl.org (Manhattan/Bronx/SI) or bklynlibrary.org (Brooklyn) or queenslibrary.org (Queens). Walk in — no library card needed for internet access.', time: 'Same day' })
+  } else if (hasPhone === 'basic') {
+    steps.push({ id: 'ph-1', text: 'Upgrade to a free smartphone through Lifeline', what: 'Your basic phone can\'t run the apps you need for jobs, benefits, and maps. Lifeline gives free smartphones to qualifying people.', detail: 'Apply at lifelinesupport.org or call 800-234-9473. Also check with your current carrier — some offer free upgrades for Lifeline-eligible customers.', time: 'Same day – 1 week' })
+  }
+
+  return steps
+}
+
 // ── Step generators map ──────────────────────────────────────────
 const STEP_GENERATORS: Record<string, (inputs: RoadmapInputs) => RoadmapStep[]> = {
   emergency: getEmergencySteps, id: getIDSteps, housing: getHousingSteps,
   food: getFoodSteps, employment: getEmploymentSteps, mentalHealth: getMentalHealthSteps,
   legal: getLegalSteps, family: getFamilySteps, education: getEducationSteps, community: getCommunitySteps,
+  phone: getPhoneSteps,
 }
 
 // ── Scoring algorithm ────────────────────────────────────────────
 function computeScore(key: string, inputs: RoadmapInputs): number {
   const { needs, housingStatus, hasID, timeAway, paroleProbation, hasChildren, foodSituation } = inputs
-  const BASE: Record<string, number> = { emergency: 0, id: 100, housing: 90, food: 85, employment: 70, mentalHealth: 65, legal: 75, family: 55, education: 45, community: 40 }
+  const BASE: Record<string, number> = { emergency: 0, id: 100, phone: 95, housing: 90, food: 85, employment: 70, mentalHealth: 65, legal: 75, family: 55, education: 45, community: 40 }
   let score = BASE[key] ?? 50
 
   if (needs.includes(key)) score += 20
@@ -283,6 +300,10 @@ function computeScore(key: string, inputs: RoadmapInputs): number {
     else if (timeAway === '5-15 years') score += 10
   }
   if (key === 'employment' && housingStatus === 'nowhere') score -= 15
+  if (key === 'phone') {
+    if (inputs.hasPhone === 'no') score = 997  // right after emergency/ID — can't do anything without a phone
+    else if (inputs.hasPhone === 'basic') score = 80
+  }
 
   return score
 }
@@ -316,6 +337,9 @@ export function generateRoadmap(inputs: RoadmapInputs): GeneratedRoadmap {
   // Auto-add legal if on supervision or unsure
   if (paroleProbation === 'parole' || paroleProbation === 'probation' || paroleProbation === 'unsure') sectionKeys.add('legal')
 
+  // Auto-add phone if no phone or basic phone
+  if (inputs.hasPhone === 'no' || inputs.hasPhone === 'basic') sectionKeys.add('phone')
+
   // Build sections
   const sections: RoadmapSection[] = []
   for (const key of sectionKeys) {
@@ -343,5 +367,6 @@ export function buildRoadmapFromAnswers(answers: Record<string, string | string[
     hasChildren: answers.hasChildren as string | undefined,
     foodSituation: answers.foodSituation as string | undefined,
     paroleProbation: answers.paroleProbation as string | undefined,
+    hasPhone: answers.hasPhone as string | undefined,
   })
 }

@@ -2,7 +2,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { QUESTION_BANK, getNextQuestion, getQuestionPath, FIRST_QUESTION } from '../data/questions.js'
 import { useApp } from '../context/AppContext'
-import { buildRoadmapFromAnswers } from '../data/roadmapEngine'
 import Icon from '../components/Icon'
 
 const MASCOT_MAP: Record<string, string> = {
@@ -22,6 +21,7 @@ const MASCOT_MESSAGES: Record<string, string> = {
   hasChildren: "This determines which shelter intake path is right for your family.",
   foodSituation: "No shame in this — there are tons of free food resources in NYC. Let's find them.",
   paroleProbation: "This helps me show which housing and benefit options are open to you.",
+  hasPhone: "A phone unlocks almost everything — jobs, benefits, maps, appointments. Let's make sure you're set up.",
   needs: "Select everything that applies. Your roadmap will cover all of it.",
 }
 
@@ -59,9 +59,7 @@ export default function QuestionPage() {
 
     const next = getNextQuestion(questionId!, value)
     if (next === null) {
-      const roadmap = buildRoadmapFromAnswers(newAnswers)
-      setRoadmap(roadmap)
-      navigate('/generating')
+      navigate('/followup')
     } else {
       navigate(`/question/${next}`)
     }
@@ -79,9 +77,7 @@ export default function QuestionPage() {
     setAnswer(questionId!, multiSelected)
     const next = (question as any).next(multiSelected)
     if (next === null) {
-      const roadmap = buildRoadmapFromAnswers(newAnswers)
-      setRoadmap(roadmap)
-      navigate('/generating')
+      navigate('/followup')
     } else {
       navigate(`/question/${next}`)
     }

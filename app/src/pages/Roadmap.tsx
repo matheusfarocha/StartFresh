@@ -16,6 +16,8 @@ const sectionIcons: Record<string, string> = {
   education:    'school',
   community:    'groups',
   custom:       'edit_note',
+  phone:        'smartphone',
+  'ai-personalized': 'auto_awesome',
 }
 
 const stepOffsets = [

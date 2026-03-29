@@ -10,6 +10,7 @@ import Resources from './pages/Resources'
 import Community from './pages/Community'
 import Profile from './pages/Profile'
 import CustomRoadmap from './pages/CustomRoadmap'
+import FollowUpQuestions from './pages/FollowUpQuestions'
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/home" element={<Home />} />
         <Route path="/question/:questionId" element={<QuestionPage />} />
+        <Route path="/followup" element={<FollowUpQuestions />} />
         <Route path="/generating" element={<GeneratingRoadmap />} />
         <Route path="/roadmap" element={<Roadmap />} />
         <Route path="/customroadmap" element={<CustomRoadmap />} />
