@@ -7,6 +7,21 @@
 
 export const QUESTION_BANK = {
 
+  // ── STEP 0: User type ────────────────────────────────────────
+  // Always the first question. Federal employees get routed to
+  // a custom roadmap builder instead of the standard flow.
+  userType: {
+    id: 'userType',
+    question: 'Which best describes you?',
+    sub: 'This helps us give you the right experience.',
+    type: 'single',
+    options: [
+      { value: 'citizen',  label: 'I am a returning citizen',    sub: 'Recently released or preparing for release' },
+      { value: 'employee', label: 'I am a federal employee',     sub: 'Helping someone build their reentry plan' },
+    ],
+    next: (answer) => answer === 'employee' ? null : 'timeAway',
+  },
+
   // ── STEP 1: Time away ────────────────────────────────────────
   // Drives: auto-need injection (mentalHealth, community),
   //         Osborne referral for 15+ (they specialize in long-term),
@@ -178,7 +193,7 @@ export const QUESTION_BANK = {
 
 // ── Flow entry point ─────────────────────────────────────────────
 // Always start here
-export const FIRST_QUESTION = 'timeAway';
+export const FIRST_QUESTION = 'userType';
 
 // ── Helper: get next question ID given current question + answer ──
 export function getNextQuestion(questionId, answer) {
