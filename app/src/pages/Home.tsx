@@ -92,7 +92,7 @@ export default function Home() {
             <button
               key={feature.title}
               onClick={() => navigate(feature.action)}
-              className={`${feature.color} ${feature.shadow} p-6 rounded-lg text-left active:translate-y-1 active:shadow-none transition-all cursor-pointer flex flex-col gap-4 ${
+              className={`${feature.color} ${feature.shadow} p-6 rounded-lg text-left hover:-translate-y-1 hover:scale-[1.02] active:translate-y-1 active:shadow-none transition-all duration-200 cursor-pointer flex flex-col gap-4 ${
                 feature.primary ? 'sm:col-span-2' : ''
               }`}
             >
