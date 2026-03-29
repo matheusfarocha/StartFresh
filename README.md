@@ -56,19 +56,29 @@ FreshStart asks a few simple questions and builds a **personalized, step-by-step
 ## Architecture
 
 ```
-User --> Adaptive Onboarding --> Roadmap Engine (priority scoring)
-              |                        |
-              v                        v
-      Gemini Follow-Up Questions    Borough-Specific Steps
-              |                        |
-              v                        v
-      AI Task Generation ---------> Personalized Roadmap
-              |
-              v
-         Sage Chatbot (full user context)
+User --> Login (Supabase Auth)
+  |
+  v
+Adaptive Onboarding (branching question bank)
+  |
+  v
+Roadmap Engine (priority scoring + borough-specific steps)
+  |
+  v
+Gemini Follow-Up Questions (3 AI questions via Edge Function)
+  |
+  v
+Gemini Task Generation (personalized tasks via Edge Function)
+  |
+  v
+Combined Roadmap --> Progress Tracking --> Supabase (persisted)
+
+  Throughout: Sage Chatbot (Edge Function, full user context)
+  Throughout: Resource Directory (45+ verified orgs)
+  Throughout: Community Forum (Supabase posts/replies)
 ```
 
-**Supabase Edge Functions** keep the Gemini API key server-side. The frontend never touches it.
+All AI calls go through **Supabase Edge Functions** — the Gemini API key never touches the frontend.
 
 ---
 
